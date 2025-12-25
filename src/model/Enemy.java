@@ -11,7 +11,16 @@ public class Enemy extends GameObject
         super(posX, posY, width, height, image);
 
         // untuk mengatur jeda tembakan musuh
-        this.shootCooldown = new Random().nextInt(180);
+        this.shootCooldown = new Random().nextInt(60);
+    }
+
+    // Kurangi cooldown tiap frame
+    public void tickCooldown() {
+        if (shootCooldown > 0) shootCooldown--;
+    }
+
+    public void resetCooldown() {
+        shootCooldown = 90; // Tiap 1 detik baru bisa nembak lagi
     }
 
     // Getter Setter buat Cooldown

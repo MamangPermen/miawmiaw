@@ -1,8 +1,8 @@
 package view;
 
 import model.Model;
-import presenter.GamePresenter;
-import presenter.MainMenuPresenter;
+import model.Sound;
+import presenter.*;
 import javax.swing.*;
 import java.awt.*;
 
@@ -13,6 +13,7 @@ public class MainFrame extends JFrame {
     private GamePanel gamePanel;
     private Model model;
     private MainMenuPresenter menuPresenter;
+    private Sound bgm = new Sound();
 
     public MainFrame() {
         this.setTitle("Miaw Miaw Boom");
@@ -21,7 +22,6 @@ public class MainFrame extends JFrame {
         this.setResizable(false);
         this.setLocationRelativeTo(null);
 
-        // Setup CardLayout buat ganti-ganti halaman
         cardLayout = new CardLayout();
         mainPanel = new JPanel(cardLayout);
 
@@ -30,45 +30,51 @@ public class MainFrame extends JFrame {
         menuPresenter = new MainMenuPresenter(MainMenu, this);
         mainPanel.add(MainMenu, "Leaderboard");
 
-        // Halaman 2: Game (Nanti di-init pas tombol play diklik)
-        // Kita siapin wadahnya dulu
-        
         this.add(mainPanel);
         this.setVisible(true);
+        playMusic(0);
     }
 
-    // Method ini dipanggil dari MainMenu pas klik PLAY
     public void switchToGame(String username) {
-        // 1. Bikin Model (Data)
+        // 1. Bikin Model
         model = new Model(username);
         
-        // 2. Bikin View (Tampilan)
-        gamePanel = new GamePanel(model); // View masih butuh baca data Model buat ngegambar
+        // 2. Bikin View (SEKARANG KOSONGAN)
+        gamePanel = new GamePanel(); // [FIX] Hapus parameter model
         
-        // 3. Bikin PRESENTER (Otak)
-        // Presenter ngejodohin Model & View
+        // 3. Bikin Presenter
         GamePresenter presenter = new GamePresenter(model, gamePanel, this);
         
-        // 4. Daftarin Presenter sebagai pendengar Input di View
+        // 4. Setup Listener
         gamePanel.addKeyListener(presenter);
         gamePanel.addMouseListener(presenter);
         gamePanel.setFocusable(true);
 
-        // 5. Tampilin
+        playMusic(1);
+
         mainPanel.add(gamePanel, "Game");
         cardLayout.show(mainPanel, "Game");
+        gamePanel.requestFocusInWindow();
         
-        // 6. Jalankan via Presenter
         presenter.startGame();
     }
     
     public void showLeaderboard() {
-        // 1. Reload Data Leaderboard via Presenter
         if (menuPresenter != null) {
             menuPresenter.loadData();
         }
-        
-        // 2. Ganti Tampilan
+        playMusic(0);
         cardLayout.show(mainPanel, "Leaderboard");
+    }
+
+    public void playMusic(int i) {
+        bgm.stop();
+        bgm.setFile(i);
+        bgm.play();
+        bgm.loop();
+    }
+
+    public void stopMusic() {
+        bgm.stop();
     }
 }

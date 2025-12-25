@@ -1,6 +1,6 @@
 package presenter;
 
-import model.Model;
+import model.*;
 import view.GamePanel;
 import view.MainFrame;
 import java.awt.event.*;
@@ -12,6 +12,7 @@ public class GamePresenter implements ActionListener, KeyListener, MouseListener
     private MainFrame mainFrame;
     private Timer gameLoop;
     private Timer enemySpawner;
+    private Sound sfx = new Sound();
 
     public GamePresenter(Model model, GamePanel view, MainFrame mainFrame) {
         this.model = model;
@@ -44,21 +45,62 @@ public class GamePresenter implements ActionListener, KeyListener, MouseListener
     // --- GAME LOOP (Jantungnya Game) ---
     @Override
     public void actionPerformed(ActionEvent e) {
-        if (model.isGameOver() || model.isPaused()) {
-            view.repaint(); // Tetap repaint buat nampilin teks Pause/Game Over
+        if (model.isGameOver()) {
+            mainFrame.stopMusic();
+            // KIRIM DATA TERAKHIR SEBELUM STOP
+            updateView(); 
+            view.repaint();
+            stopGame();
             return;
         }
 
-        // 1. SURUH MODEL MIKIR (Update Posisi)
-        model.updateGameLogic(); 
+        if (model.isPaused()) {
+            // KIRIM DATA BIAR TAMPILAN GAK ILANG PAS PAUSE
+            updateView();
+            view.repaint();
+            return;
+        }
 
-        // 2. SURUH VIEW GAMBAR ULANG
+        model.updateGameLogic(); 
+        
+        // [WAJIB] UPDATE DATA VIEW TIAP FRAME
+        updateView();
+        
         view.repaint();
+    }
+
+    // METHOD BARU BUAT TRANSFER DATA
+    private void updateView() {
+        // 1. Kirim Aset (Cukup sekali sebenernya, tapi disini gapapa biar aman)
+        view.setGameAssets(
+            model.getBgImage(), model.getUiBoard(), model.getUiButton(), model.getPixelFont()
+        );
+        
+        // 2. Kirim Objek Game
+        view.setGameObjects(
+            model.getPlayer(), model.getEnemies(), model.getBullets(), model.getObstacles()
+        );
+        
+        // 3. Kirim Status & Statistik
+        // Hitung kills disini
+        int kills = model.getScore() / 10; 
+        
+        view.setGameStats(
+            model.getUsername(), 
+            model.getScore(), 
+            model.getPlayer().getAmmo(), 
+            model.getPlayer().getMissedBullets(),
+            kills,
+            model.isGameOver(),
+            model.isPaused()
+        );
+        
+        // 4. Kirim Index Tombol
+        view.setPressedButtonIndex(model.getPressedButtonIndex());
     }
 
     // --- INPUT LISTENER (Keyboard & Mouse) ---
     // Presenter yang dengerin, terus nyuruh Model gerak
-    
     @Override
     public void keyPressed(KeyEvent e) {
         int key = e.getKeyCode();
@@ -136,7 +178,14 @@ public class GamePresenter implements ActionListener, KeyListener, MouseListener
 
         // 3. Logic Nembak (Cuma jalan kalo gak lagi Menu Game Over / Pause)
         if (e.getButton() == MouseEvent.BUTTON1) {
-            model.shootPlayerBullet(mx, my);
+            // cek ammo dulu sebelum nembak
+            if (model.getPlayer().getAmmo() > 0) {
+                model.shootPlayerBullet(mx, my); // player nembak
+
+                // Mainkan Sound Effect Nembak
+                sfx.setFile(2);
+                sfx.play();
+            }
         }
     }
 
@@ -159,23 +208,6 @@ public class GamePresenter implements ActionListener, KeyListener, MouseListener
             model.setPressedButtonIndex(0);
             view.repaint();
         }
-    }
-    
-    // Method Restart Game (Reset semua variabel)
-    private void restartGame() {
-        model.setScore(0);
-        model.setAmmo(0);
-        model.setMissedBullets(0);
-        model.setGameOver(false);
-        model.setGameStarted(true);
-        model.getEnemies().clear();
-        model.getBullets().clear();
-        model.getObstacles().clear();
-        model.generateObstacles(); // Generate ulang batu
-        
-        // Reset Posisi Player
-        model.getPlayer().setPosX(1024 / 2 - 32);
-        model.getPlayer().setPosY(768 / 2 - 32);
     }
 
     // Method interface lain (kosongin aja)
