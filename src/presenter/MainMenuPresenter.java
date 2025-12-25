@@ -10,23 +10,28 @@ import java.sql.ResultSet;
 import java.util.ArrayList;
 import javax.swing.JOptionPane;
 
-public class MainMenuPresenter {
+// kelas MainMenuPresenter adalah presenter untuk menghubungkan Model Database dan MainMenu (View)
+// kelas ini bertanggung jawab untuk mengelola logika menu utama, input pengguna, dan
+
+public class MainMenuPresenter 
+{
+    // Atribut buat nyimpen referensi ke View dan MainFrame
     private MainMenu view;
     private MainFrame mainFrame; 
     private Database db;
 
+    // metode konstruktor buat inisialisasi MainMenuPresenter dengan View dan MainFrame
     public MainMenuPresenter(MainMenu view, MainFrame mainFrame) {
         this.view = view;
         this.mainFrame = mainFrame;
-        this.db = new Database(); // Init DB sekali aja di sini
+        this.db = new Database(); // Init DB
 
         loadData(); // Load data awal
         initController(); // Pasang Listener Mouse
     }
 
-    // --- LOGIC INPUT (PINDAHAN DARI VIEW) ---
+    // LOGIC INPUT
     private void initController() {
-        // Kita bikin MouseAdapter di sini, Logicnya MVP banget!
         MouseAdapter handler = new MouseAdapter() {
             
             // 1. SCROLL WHEEL
@@ -41,7 +46,7 @@ public class MainMenuPresenter {
                 int mx = e.getX();
                 int my = e.getY();
 
-                // Akses Rectangle langsung dari View (Variable Public)
+                // Akses Rectangle dari View
                 if (view.scrollBarRect != null && view.scrollBarRect.contains(mx, my)) {
                     view.setIsDraggingScroll(true); // Suruh View berubah warna
                     return;
@@ -53,10 +58,10 @@ public class MainMenuPresenter {
                     view.setPressedButtonType(2); // Suruh View "mendelep" tombol quit
                 }
 
-                checkTableClick(mx, my);
+                checkTableClick(mx, my); // Cek klik di tabel leaderboard
             }
 
-            // 3. MOUSE DRAGGED (Matematika Scroll)
+            // 3. MOUSE DRAGGED (Scroll)
             @Override
             public void mouseDragged(MouseEvent e) {
                 Object[][] data = view.getLeaderboardData();
@@ -83,7 +88,7 @@ public class MainMenuPresenter {
                      
                      // Update kalo ada perubahan
                      if (newOffset != currentOffset) {
-                         // Kita reuse updateScroll tapi dengan selisihnya
+                         // reuse updateScroll tapi dengan selisihnya
                          updateScroll(newOffset - currentOffset); 
                      }
                 }
@@ -103,14 +108,15 @@ public class MainMenuPresenter {
                     String name = view.getUsernameField().getText().trim();
                     if (!name.isEmpty()) {
                         mainFrame.switchToGame(name);
-                    } else {
+                    } else { // jika username kosong
                         JOptionPane.showMessageDialog(view, "Isi username dulu atuh!");
                     }
                 }
                 
                 // Cek Klik Tombol Quit
                 else if (view.quitBtnRect != null && view.quitBtnRect.contains(mx, my)) {
-                    System.exit(0);
+                    db.closeConnection(); // Tutup koneksi DB sebelum keluar
+                    System.exit(0); // Keluar aplikasi
                 }
             }
         };
@@ -119,8 +125,8 @@ public class MainMenuPresenter {
         view.addMouseListenerToPanel(handler);
     }
 
-    // --- HELPER METHODS ---
-
+    // HELPER METHODS
+    // metode buat ngupdate scroll berdasarkan input scroll wheel atau drag
     private void updateScroll(int amount) {
         Object[][] data = view.getLeaderboardData();
         if (data == null) return;
@@ -136,6 +142,7 @@ public class MainMenuPresenter {
         view.setScrollOffset(next); // Update View
     }
 
+    // metode buat ngecek klik di tabel leaderboard
     private void checkTableClick(int mx, int my) {
         Object[][] data = view.getLeaderboardData();
         if (data == null) return;
@@ -163,12 +170,13 @@ public class MainMenuPresenter {
         }
     }
 
-    // --- METHOD LOAD DATA (DATABASE) ---
+    // metode buat load data leaderboard dari database
     public void loadData() {
+        java.sql.ResultSet rs = null;
         try {
             // 1. Query Data
             String sql = "SELECT username, skor, missed_bullets, ammo FROM tbenefit ORDER BY skor DESC";
-            ResultSet rs = db.executeQuery(sql);
+            rs = db.executeQuery(sql);
             
             // 2. Masukin ke List
             ArrayList<Object[]> dataList = new ArrayList<>();
@@ -194,6 +202,11 @@ public class MainMenuPresenter {
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("Gagal load leaderboard");
+        } finally {
+            // tutup ResultSet
+            try {
+                if (rs != null) rs.getStatement().close();
+            } catch (Exception ex) { ex.printStackTrace(); }
         }
     }
 }

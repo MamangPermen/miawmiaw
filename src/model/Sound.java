@@ -7,7 +7,7 @@ import javax.sound.sampled.Clip;
 
 public class Sound 
 {
-    Clip clip;
+    Clip clip; // objek Clip buat mainin suara
     URL soundURL[] = new URL[10]; // siapin 10 slot suara
 
     public Sound() {
@@ -19,7 +19,8 @@ public class Sound
         soundURL[3] = getClass().getResource("/assets/sound/hit.wav");
     }
 
-    public void setFile(int i) {
+    public void setFile(int i) { // pilih file suara berdasarkan index
+        // Muat file suara
         try {
             AudioInputStream ais = AudioSystem.getAudioInputStream(soundURL[i]);
             clip = AudioSystem.getClip();
@@ -29,20 +30,20 @@ public class Sound
         }
     }
 
-    public void play() {
+    public void play() { // mainkan sound
         if (clip != null) {
             clip.setFramePosition(0); // Mulai dari awal
             clip.start();
         }
     }
 
-    public void loop() {
+    public void loop() { // loop sound
         if (clip != null) {
             clip.loop(Clip.LOOP_CONTINUOUSLY);
         }
     }
 
-    public void stop() {
+    public void stop() { // stop sound
         if (clip != null) {
             clip.stop();
         }

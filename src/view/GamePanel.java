@@ -10,10 +10,11 @@ import model.Enemy;
 import model.Obstacle;
 import model.Player;
 
-public class GamePanel extends JPanel {
-    // KITA HAPUS REFERENCE KE MODEL!
-    // Gantinya, kita siapin wadah buat data-data yang mau digambar
-    
+// Kelas gamepanel adalah panel khusus buat ngegambar game
+// kelas ini berfungsi sebagai wadah visualisasi game
+
+public class GamePanel extends JPanel 
+{    
     // Objek Game
     private Player player;
     private ArrayList<Enemy> enemies;
@@ -36,13 +37,13 @@ public class GamePanel extends JPanel {
     private boolean isPaused = false;
     private int pressedButtonIndex = 0;
 
+    // Konstruktor
     public GamePanel() {
         this.setFocusable(true); 
         this.setBackground(Color.BLACK); 
     }
 
-    // --- METODE BUAT UPDATE DATA (DIPANGGIL PRESENTER) ---
-    // Ini cara Presenter "nyuapin" data ke View tanpa View tau soal Model
+    // metode buat nyetel aset game dari presenter
     public void setGameAssets(Image bg, Image board, Image btn, Font font) {
         this.bgImage = bg;
         this.uiBoard = board;
@@ -50,6 +51,7 @@ public class GamePanel extends JPanel {
         this.pixelFont = font;
     }
 
+    // metode buat nyetel objek game dari presenter
     public void setGameObjects(Player p, ArrayList<Enemy> e, ArrayList<Bullet> b, ArrayList<Obstacle> o) {
         this.player = p;
         this.enemies = e;
@@ -57,6 +59,7 @@ public class GamePanel extends JPanel {
         this.obstacles = o;
     }
 
+    // metode buat nyetel data status game dari presenter
     public void setGameStats(String user, int sc, int am, int ms, int kl, boolean over, boolean pause) {
         this.username = user;
         this.score = sc;
@@ -67,10 +70,12 @@ public class GamePanel extends JPanel {
         this.isPaused = pause;
     }
 
+    // metode buat nyetel index tombol yang ditekan (buat efek tekan tombol)
     public void setPressedButtonIndex(int index) {
         this.pressedButtonIndex = index;
     }
 
+    // metode paintComponent buat ngegambar ulang panel
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -78,10 +83,10 @@ public class GamePanel extends JPanel {
         // Pastikan asset udah ada biar ga NullPointerException
         if (bgImage != null) g.drawImage(bgImage, 0, 0, getWidth(), getHeight(), null);
         
-        // Kalo Player belum diset (awal banget), jangan gambar dulu
+        // Kalo Player belum diset, jangan gambar dulu
         if (player == null) return;
 
-        // 2. Gambar Player
+        // Gambar Player
         if (player.isFacingRight()) {
             // Kalau statusnya madep kanan -> Gambar dibalik
             drawFlipped(g, player.getImage(), player.getPosX(), player.getPosY(), player.getWidth(), player.getHeight());
@@ -90,7 +95,7 @@ public class GamePanel extends JPanel {
             g.drawImage(player.getImage(), player.getPosX(), player.getPosY(), player.getWidth(), player.getHeight(), null);
         }
 
-        // 3. Gambar Musuh
+        // Gambar Musuh
         if (enemies != null) {
             for (Enemy e : enemies) {
                 if (e.isFacingRight()) {
@@ -101,24 +106,24 @@ public class GamePanel extends JPanel {
             }
         }
 
-        // 4. Gambar Peluru
+        // Gambar Peluru
         if (bullets != null) {
             for (Bullet b : bullets) {
                 g.drawImage(b.getImage(), b.getPosX(), b.getPosY(), b.getWidth(), b.getHeight(), null);
             }
         }
 
-        // 5. Gambar Batu
+        // Gambar Box
         if (obstacles != null) {
             for (Obstacle o : obstacles) {
                 g.drawImage(o.getImage(), o.getPosX(), o.getPosY(), o.getWidth(), o.getHeight(), null);
             }
         }
 
-        // --- 6. HUD ---
+        // HUD
         drawHUD(g);
 
-        // 7. Overlay Status
+        // Overlay Status
         if (isGameOver) {
             drawGameOverMenu(g);
         } else if (isPaused) {
@@ -126,6 +131,7 @@ public class GamePanel extends JPanel {
         }
     }
     
+    // metode bantu buat gambar HUD
     private void drawHUD(Graphics g) {
         int hudX = 10;
         int hudY = 10;
@@ -143,36 +149,37 @@ public class GamePanel extends JPanel {
         g.drawString("Missed: " + missed, hudX + 20, hudY + 85);
     }
 
+    // metode bantu buat gambar menu game over
     private void drawGameOverMenu(Graphics g) {
+        // Latar Gelap
         g.setColor(new Color(0, 0, 0, 150));
         g.fillRect(0, 0, getWidth(), getHeight());
 
+        // Board Game Over
         int centerX = getWidth() / 2;
         int centerY = getHeight() / 2;
         int boardW = 380; 
         int boardH = 420; 
         int boardY = centerY - (boardH / 2);
         
-        if (uiBoard != null) g.drawImage(uiBoard, centerX - (boardW / 2), boardY, boardW, boardH, null);
+        if (uiBoard != null) g.drawImage(uiBoard, centerX - (boardW / 2), boardY, boardW, boardH, null); // Gambar board
+        Font mainFont = (pixelFont != null) ? pixelFont : new Font("SansSerif", Font.BOLD, 20); // set font
 
-        Font mainFont = (pixelFont != null) ? pixelFont : new Font("SansSerif", Font.BOLD, 20);
-
+        // Judul
         g.setColor(Color.WHITE);
         g.setFont(mainFont.deriveFont(40f));
         drawCenteredString(g, "GAME OVER!", centerX, boardY + 85);
-
+        // Info Stats
         g.setFont(mainFont.deriveFont(22f));
         g.setColor(Color.YELLOW); 
-        
-        // pake variabel kills yang dikirim Presenter
         drawCenteredString(g, "Username: " + username, centerX, boardY + 120);
         drawCenteredString(g, "Final Score: " + score, centerX, boardY + 150);
         drawCenteredString(g, "Total Vampcats Killed: " + kills, centerX, boardY + 180);
-
+        // Instruksi
         g.setColor(Color.LIGHT_GRAY);
         g.setFont(mainFont.deriveFont(16f)); 
         drawCenteredString(g, "Click 'Back to Menu' to save & exit", centerX, boardY + 230);
-
+        // Tombol Back to Menu
         g.setColor(Color.WHITE);
         g.setFont(mainFont.deriveFont(24f));
         
@@ -180,16 +187,18 @@ public class GamePanel extends JPanel {
         int btnH = 60;
         int btnY = boardY + 260; 
 
-        if (pressedButtonIndex == 2) {
+        if (pressedButtonIndex == 2) { // Tombol ditekan
             if(uiButton != null) g.drawImage(uiButton, centerX - (btnW / 2) + 2, btnY + 2, btnW - 4, btnH - 4, null);
-        } else {
+        } else { // Tombol normal
             if(uiButton != null) g.drawImage(uiButton, centerX - (btnW / 2), btnY, btnW, btnH, null);
         }
         
         drawCenteredString(g, "BACK TO MENU", centerX, btnY + 33);
     }
 
+    // metode bantu buat gambar menu pause
     private void drawMenu(Graphics g, String title, String infoText, String btn1Text, String btn2Text) {
+        // Latar Gelap
         g.setColor(new Color(0, 0, 0, 150));
         g.fillRect(0, 0, getWidth(), getHeight());
 
@@ -199,10 +208,10 @@ public class GamePanel extends JPanel {
         int boardH = 350;
         int boardY = centerY - (boardH / 2);
         
-        if(uiBoard != null) g.drawImage(uiBoard, centerX - (boardW / 2), boardY, boardW, boardH, null);
+        if(uiBoard != null) g.drawImage(uiBoard, centerX - (boardW / 2), boardY, boardW, boardH, null); // Gambar board
+        Font mainFont = (pixelFont != null) ? pixelFont : new Font("SansSerif", Font.BOLD, 20); // set font
 
-        Font mainFont = (pixelFont != null) ? pixelFont : new Font("SansSerif", Font.BOLD, 20);
-
+        // judul
         g.setColor(Color.WHITE);
         g.setFont(mainFont.deriveFont(40f)); 
         drawCenteredString(g, title, centerX, boardY + 85); 
@@ -218,8 +227,9 @@ public class GamePanel extends JPanel {
 
         int btnW = 200;
         int btnH = 60;
-        int btn1Y = boardY + 140;
         
+        // Tombol 1
+        int btn1Y = boardY + 140;
         if (pressedButtonIndex == 1) {
             if(uiButton != null) g.drawImage(uiButton, centerX - (btnW / 2) + 2, btn1Y + 2, btnW - 4, btnH - 4, null);
         } else {
@@ -227,6 +237,7 @@ public class GamePanel extends JPanel {
         }
         drawCenteredString(g, btn1Text, centerX, btn1Y + 33); 
 
+        // Tombol 2
         int btn2Y = boardY + 220; 
         if (pressedButtonIndex == 2) {
             if(uiButton != null) g.drawImage(uiButton, centerX - (btnW / 2) + 2, btn2Y + 2, btnW - 4, btnH - 4, null);
@@ -236,14 +247,16 @@ public class GamePanel extends JPanel {
         drawCenteredString(g, btn2Text, centerX, btn2Y + 33);
     }
 
+    // metode bantu buat gambar string di tengah
     private void drawCenteredString(Graphics g, String text, int x, int y) {
         FontMetrics fm = g.getFontMetrics();
         int textW = fm.stringWidth(text);
         g.drawString(text, x - (textW / 2), y);
     }
 
+    // metode bantu buat gambar gambar dibalik (mirror), digunakan buat player & musuh saat menghadap kanan
     private void drawFlipped(Graphics g, Image img, int x, int y, int w, int h) {
-        Graphics2D g2d = (Graphics2D) g;
+        Graphics2D g2d = (Graphics2D) g; // cast ke Graphics2D buat transformasi
         int imgWidth = img.getWidth(null);
         int imgHeight = img.getHeight(null);
         g2d.drawImage(img, x, y, x + w, y + h, imgWidth, 0, 0, imgHeight, null);

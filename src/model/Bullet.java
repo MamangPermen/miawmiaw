@@ -1,7 +1,8 @@
 package model;
 import java.awt.*;
 
-public class Bullet extends GameObject {
+public class Bullet extends GameObject // kelas untuk peluru turunan dari GameObject
+{
     private boolean isEnemy; // true = peluru alien, false = peluru player
 
     public Bullet(int posX, int posY, int width, int height, Image image, boolean isEnemy) {

@@ -1,11 +1,11 @@
 package model;
 import java.awt.*;
 
-public class Player extends GameObject 
+public class Player extends GameObject // kelas untuk player turunan dari GameObject
 {
-    private String username;
-    private int score;
-    private int ammo;
+    private String username; // nama player
+    private int score; // skor player
+    private int ammo; // jumlah peluru player
     private int missedBullets; // Buat syarat nambah peluru
     private boolean facingRight = false; // arah hadap player, default ke kiri
 

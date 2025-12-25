@@ -19,7 +19,7 @@ public class MainMenu extends JPanel {
     private int pressedButtonType = 0; 
     private boolean isDraggingScroll = false;
 
-    // KOORDINAT (Public biar Presenter bisa baca posisi buat deteksi klik)
+    // KOORDINAT & RECTANGLE
     public Rectangle playBtnRect, quitBtnRect, scrollBarRect;
     public int boardX, boardY, boardW, boardH;
     public int scrollTrackY, scrollTrackHeight;
@@ -38,22 +38,39 @@ public class MainMenu extends JPanel {
             boardImage = new ImageIcon(getClass().getResource("/assets/ui_board.png")).getImage();
             btnImage = new ImageIcon(getClass().getResource("/assets/ui_button.png")).getImage();
             
-            InputStream is = getClass().getResourceAsStream("/assets/pixel_font.ttf");
-            pixelFont = Font.createFont(Font.TRUETYPE_FONT, is).deriveFont(24f);
-            GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-            ge.registerFont(pixelFont);
+            // Muat Font Pixel
+            try (InputStream is = getClass().getResourceAsStream("/assets/pixel_font.ttf")) {
+                pixelFont = Font.createFont(Font.TRUETYPE_FONT, is).deriveFont(24f);
+                GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+                ge.registerFont(pixelFont);
+            }
         } catch (Exception e) {
+            pixelFont = new Font("SansSerif", Font.BOLD, 24);
             e.printStackTrace();
         }
     }
 
     private void setupComponents() {
         usernameField = new JTextField(15);
-        usernameField.setFont(pixelFont.deriveFont(20f));
+        // Set font pixel kalo berhasil dimuat
+        if (pixelFont != null) {
+            usernameField.setFont(pixelFont.deriveFont(20f));
+        } else { // Fallback kalo gagal
+            usernameField.setFont(new Font("SansSerif", Font.BOLD, 20));
+        }
         usernameField.setBounds(0, 0, 0, 0); 
         usernameField.setBackground(new Color(255, 255, 255, 220)); 
         usernameField.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
         this.add(usernameField);
+    }
+
+    // helper method buat dapetin font aman (sans serif kalo pixelFont null)
+    private Font getFontSafe(float size) {
+        if (pixelFont != null) {
+            return pixelFont.deriveFont(size);
+        } else {
+            return new Font("SansSerif", Font.BOLD, (int)size);
+        }
     }
 
     @Override
@@ -66,9 +83,8 @@ public class MainMenu extends JPanel {
         g.fillRect(0, 0, getWidth(), getHeight());
 
         // 2. Judul (Font 60f)
-        if (pixelFont != null) g.setFont(pixelFont);
+        g.setFont(getFontSafe(60f));
         g.setColor(Color.WHITE);
-        g.setFont(g.getFont().deriveFont(60f)); 
         drawCenteredString(g, "STRIKE VAMPCATS", getWidth() / 2, 80);
 
         // 3. Board
@@ -79,10 +95,10 @@ public class MainMenu extends JPanel {
         if (boardImage != null) g.drawImage(boardImage, boardX, boardY, boardW, boardH, null);
 
         // 4. Header Board (Font 40f & 22f)
-        g.setFont(g.getFont().deriveFont(40f));
+        g.setFont(getFontSafe(40f));
         drawCenteredString(g, "HALL OF FAME", getWidth() / 2, boardY + 35);
 
-        g.setFont(g.getFont().deriveFont(22f));
+        g.setFont(getFontSafe(22f));
         g.setColor(Color.YELLOW);
         int startY = boardY + 110;
         g.drawString("USERNAME", boardX + 60, startY);
@@ -96,7 +112,7 @@ public class MainMenu extends JPanel {
         // 5. ISI TABEL
         if (leaderboardData != null) {
             int rowY = startY + 40;
-            // Gunakan scrollOffset yang diatur Presenter
+            // Gunakan scrollOffset dari Presenter
             int endIndex = Math.min(leaderboardData.length, scrollOffset + maxVisibleRows);
 
             for (int i = scrollOffset; i < endIndex; i++) {
@@ -149,7 +165,7 @@ public class MainMenu extends JPanel {
 
         // 7. INPUT FIELD (Font 20f)
         int inputY = boardY + boardH + 20;
-        g.setFont(g.getFont().deriveFont(20f));
+        g.setFont(getFontSafe(20f));
         g.setColor(Color.WHITE);
         g.drawString("Username:", boardX + 80, inputY + 20);
         usernameField.setBounds(boardX + 200, inputY, 200, 30);
@@ -167,13 +183,13 @@ public class MainMenu extends JPanel {
         if (type == 1) playBtnRect = new Rectangle(x, y, w, h);
         else quitBtnRect = new Rectangle(x, y, w, h);
 
+        g.setFont(getFontSafe(24f));
+
         if (pressedButtonType == type) {
             g.drawImage(btnImage, x + 2, y + 2, w - 4, h - 4, null);
-            g.setFont(pixelFont.deriveFont(24f));
             drawCenteredString(g, text, x + w/2, y + 33); 
         } else {
             g.drawImage(btnImage, x, y, w, h, null);
-            g.setFont(pixelFont.deriveFont(24f));
             drawCenteredString(g, text, x + w/2, y + 33);
         }
     }
@@ -183,8 +199,7 @@ public class MainMenu extends JPanel {
         g.drawString(text, x - (fm.stringWidth(text) / 2), y);
     }
 
-    // === METHOD KHUSUS MVP (Dipanggil Presenter) ===
-
+    // === METHOD KHUSUS (Dipanggil Presenter) ===
     // 1. Biar Presenter bisa masang kuping (Listener)
     public void addMouseListenerToPanel(MouseAdapter listener) {
         this.addMouseListener(listener);

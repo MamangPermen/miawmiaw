@@ -4,37 +4,37 @@ import java.awt.*;
 import java.util.*;
 import javax.swing.ImageIcon;
 
-// HAPUS implements ActionListener, KeyListener, dll. Model skrg murni data.
-public class Model { 
-    
-    // --- KONFIGURASI LAYAR ---
+// Kelas Model adalah kelas utama yang menyimpan semua data dan logika game
+// Kelas ini menyediakan metode untuk mengupdate logika game, spawn musuh, dan menyimpan/memuat data dari database
+
+public class Model 
+{     
+    // KONFIGURASI LAYAR
     int frameWidth = 1024;
     int frameHeight = 768;
 
-    // --- KOMPONEN ---
-    private Database db; // View dihapus dari sini, Model gak boleh tau soal View
+    // KOMPONEN 
+    private Database db;
 
-    // --- OBJEK GAME ---
+    // OBJEK GAME 
     Player player;
     ArrayList<Enemy> enemies;
     ArrayList<Bullet> bullets;
     ArrayList<Obstacle> obstacles;
 
-    // --- GAMBAR ---
+    // GAMBAR
     Image bgImage, playerImage, enemyImage, playerBulletImage, obsImage, enemyBulletImage;
     Image uiBoard, uiButton;
 
-    // Font
+    // FONT
     Font pixelFont;
 
-    // --- GAME STATE ---
-    // Timer dihapus dari sini, sekarang dipegang GamePresenter
-    
+    // GAME STATE
     boolean gameOver = false;
     boolean gameStarted = false;
     boolean isPaused = false;
     
-    // Statistik
+    // STATISTIK PLAYER
     String username;
     int score = 0;
     int missedBulletsCounter = 0;
@@ -43,12 +43,12 @@ public class Model {
     int pressedButtonIndex = 0;
     private Sound sfxModel = new Sound();
 
-    // --- KONSTRUKTOR ---
+    // KONSTRUKTOR
     public Model(String username) {
-        this.username = username;
-        this.db = new Database(); 
+        this.username = username; // simpan username player
+        this.db = new Database(); // inisialisasi koneksi database
 
-        loadImages();
+        loadImages(); // load aset gambar
 
         // spawn player di tengah layar
         player = new Player(frameWidth / 2 - 32, frameHeight / 2 - 32, 64, 64, playerImage, username);
@@ -56,18 +56,20 @@ public class Model {
         // load data user dari database
         loadUserData();
 
+        // inisialisasi list objek game
         enemies = new ArrayList<>();
         bullets = new ArrayList<>();
         obstacles = new ArrayList<>();
 
-        generateObstacles();
+        generateObstacles(); // buat obstacle di awal game
     }
 
     private void loadUserData() {
+        java.sql.ResultSet rs = null;
         try {
             // Cek apakah user ini udah pernah main sebelumnya?
             String sql = "SELECT * FROM tbenefit WHERE username = '" + username + "'";
-            java.sql.ResultSet rs = db.executeQuery(sql);
+            rs = db.executeQuery(sql);
             
             if (rs.next()) {
                 // KALO ADA DATA LAMA (USER LAMA)
@@ -90,10 +92,18 @@ public class Model {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            System.out.println("Gagal load user data");
+        } finally {
+            // tutup ResultSet
+            try {
+                if (rs != null) {
+                    // Nutup Statement otomatis nutup ResultSet juga
+                    rs.getStatement().close(); 
+                }
+            } catch (Exception ex) { ex.printStackTrace(); }
         }
     }
 
+    // Metode buat load gambar dan font dari folder assets
     private void loadImages() {
         try {
             // Langsung panggil nama file yang udah lu crop tadi
@@ -105,28 +115,27 @@ public class Model {
             enemyBulletImage = new ImageIcon(getClass().getResource("/assets/BulletEnemy.png")).getImage();
             uiBoard = new ImageIcon(getClass().getResource("/assets/ui_board.png")).getImage();
             uiButton = new ImageIcon(getClass().getResource("/assets/ui_button.png")).getImage();
-            pixelFont = Font.createFont(Font.TRUETYPE_FONT, getClass().getResourceAsStream("/assets/pixel_font.ttf")).deriveFont(24f);
-
-            // register font biar bisa dipake di seluruh aplikasi
-            GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-            ge.registerFont(pixelFont);
-
+            
+            // Pake Try-With-Resources buat InputStream Font
+            try (java.io.InputStream is = getClass().getResourceAsStream("/assets/pixel_font.ttf")) {
+                pixelFont = Font.createFont(Font.TRUETYPE_FONT, is).deriveFont(24f);
+                GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+                ge.registerFont(pixelFont);
+            }
         } catch (Exception e) {
-            // Ini bakal nongol kalo lu salah ketik nama file
-            System.out.println("Gagal load gambar: " + e.getMessage());
+            pixelFont = new Font("SansSerif", Font.BOLD, 24);
             e.printStackTrace(); 
         }
     }
 
-    // --- LOGIC UTAMA (DIPANGGIL PRESENTER) ---
-    // [FIX] Hapus parameter ActionEvent, ganti jadi public void biasa
+    // LOGIC UTAMA (metode untuk update logika game setiap frame)
     public void updateGameLogic() {
-        // Cek status dipindah ke Presenter, tapi double check disini gapapa
+        // Cek status dipindah ke Presenter
         if (gameOver || !gameStarted || isPaused) {
             return; 
         }
 
-        // --- 1. UPDATE PLAYER ---
+        // 1. UPDATE PLAYER
         int pPrevX = player.getPosX();
         int pPrevY = player.getPosY();
         player.update();
@@ -137,7 +146,7 @@ public class Model {
         if (player.getPosY() < 0) player.setPosY(0);
         if (player.getPosY() > frameHeight - player.getHeight()) player.setPosY(frameHeight - player.getHeight());
 
-        // Player vs Batu
+        // Logika untuk gabisa nembus obstacle
         Rectangle playerRect = player.getBounds();
         for (Obstacle o : obstacles) {
             if (playerRect.intersects(o.getBounds())) {
@@ -146,14 +155,14 @@ public class Model {
             }
         }
         
-        // --- 2. UPDATE MUSUH ---
+        // 2. UPDATE MUSUH
         for (Enemy en : enemies) {
             int ePrevX = en.getPosX();
             int ePrevY = en.getPosY(); 
             en.update(); 
             en.tickCooldown(); // kurangi cooldown biar gak nembak sembarangan
 
-            // A. LOGIKA TABRAKAN BATU (SLIDING)
+            // A. LOGIKA TABRAKAN box (SLIDING)
             Rectangle enemyRect = en.getBounds();
             for (Obstacle o : obstacles) {
                 if (enemyRect.intersects(o.getBounds())) {
@@ -182,7 +191,7 @@ public class Model {
             }
         }
 
-        // --- 3. UPDATE PELURU ---
+        // 3. UPDATE PELURU
         for (int i = 0; i < bullets.size(); i++) {
             Bullet b = bullets.get(i);
             b.update(); 
@@ -191,8 +200,9 @@ public class Model {
                 boolean kenaAtas = b.getPosY() <= 0;
                 boolean kenaKiri = b.getPosX() <= 0;
                 boolean kenaKanan = b.getPosX() >= frameWidth - b.getWidth();
+                boolean kenaBawah = b.getPosY() >= frameHeight;
 
-                if (kenaAtas || kenaKiri || kenaKanan) {
+                if (kenaAtas || kenaKiri || kenaKanan || kenaBawah) {
                     handleMissedBullet(b, i); 
                     i--; 
                     continue; 
@@ -200,11 +210,12 @@ public class Model {
             }
         }
 
-        // --- 4. CEK TABRAKAN LAINNYA ---
+        // 4. CEK TABRAKAN LAINNYA
         checkCollisions();
         cleanupObjects();
     }
     
+    // Metode buat spawn musuh di posisi acak di bawah layar
     public void spawnEnemy() {
         Random rand = new Random();
         int randomX = rand.nextInt(frameWidth - 100);
@@ -213,14 +224,14 @@ public class Model {
         enemies.add(vampire);
     }
 
+    // Metode buat generate obstacle di posisi acak
     public void generateObstacles() {
         Random rand = new Random();
         obstacles.clear(); // Pastikan list bersih sebelum mulai
         
-        // 1. Tentukan Jumlah box (4-8)
-        int count = rand.nextInt(4) + 4; 
+        // 1. Tentukan Jumlah box (4-7)
+        int count = rand.nextInt(3) + 4;
 
-        // Kita pake loop "while" dengan batas percobaan biar gak infinite loop
         int attempts = 0;
         while (obstacles.size() < count && attempts < 100) {
             attempts++;
@@ -236,14 +247,14 @@ public class Model {
             Rectangle newRect = new Rectangle(x, y, size, size);
             boolean aman = true;
 
-            // --- CEK 1: JANGAN DEKETAN SAMA BATU LAIN (REFACTORED) ---
+            // CEK 1: JANGAN DEKETAN SAMA box LAIN
             int j = 0;
-            // Loop jalan selama masih ada batu DAN status masih aman
+            // Loop jalan selama masih ada box DAN status masih aman
             while (j < obstacles.size() && aman) {
                 Obstacle o = obstacles.get(j);
                 Rectangle existing = o.getBounds();
                 
-                // Area aman ("gelembung" 100px)
+                // Area aman
                 Rectangle safeZone = new Rectangle(
                     existing.x - 100, existing.y - 100, 
                     existing.width + 200, existing.height + 200
@@ -251,13 +262,11 @@ public class Model {
 
                 if (safeZone.intersects(newRect)) {
                     aman = false;
-                    // Gak perlu break, loop otomatis berhenti di putaran depan karena 'aman' jadi false
                 }
                 j++;
             }
             
-            // --- CEK 2: JANGAN MUNCUL DI TENGAH (TEMPAT PLAYER) ---
-            // Cek ini cuma kalau lolos Cek 1 (hemat resource)
+            // CEK 2: JANGAN MUNCUL DI TENGAH (TEMPAT PLAYER)
             if (aman) {
                 Rectangle playerSpawnZone = new Rectangle(
                     frameWidth / 2 - 100, frameHeight / 2 - 100, 200, 200
@@ -275,6 +284,7 @@ public class Model {
         }
     }
 
+    // Metode buat nembak peluru musuh ke arah player
     private void shootEnemyBullet(Enemy en) {
         // tentuin target (posisi player)
         int startX = en.getPosX() + en.getWidth() / 2;
@@ -291,18 +301,21 @@ public class Model {
         int velX = (int) ((diffX / distance) * speed);
         int velY = (int) ((diffY / distance) * speed);
 
+        // buat peluru baru
         Bullet b = new Bullet(startX, startY, 24, 24, enemyBulletImage, true);
         b.setVelX(velX);
         b.setVelY(velY);
         bullets.add(b);
     }
 
+    // Metode buat nembak peluru player ke arah target (mouse click)
     public void shootPlayerBullet(int targetX, int targetY) {
-        if (player.getAmmo() <= 0) return; 
+        if (player.getAmmo() <= 0) return; // ga ada peluru, gabisa nembak
 
+        // tentukan titik spawn peluru (tengah player)
         int startX = player.getPosX() + player.getWidth() / 2;
         int startY = player.getPosY() + player.getHeight() / 2;
-
+        // hitung selisih posisi antara Mouse (Target) dan Player (Asal)
         double diffX = targetX - startX;
         double diffY = targetY - startY;
         double distance = Math.sqrt((diffX * diffX) + (diffY * diffY));
@@ -311,61 +324,58 @@ public class Model {
         int velX = (int) ((diffX / distance) * speed);
         int velY = (int) ((diffY / distance) * speed);
 
+        // buat peluru baru
         Bullet b = new Bullet(startX, startY, 24, 24, playerBulletImage, false);
         b.setVelX(velX);
         b.setVelY(velY);
-        
+        // update list peluru dan kurangi ammo player
         bullets.add(b);
         player.setAmmo(player.getAmmo() - 1); 
     }
 
+    // Metode buat ngecek tabrakan antar objek game
     private void checkCollisions() {
         Rectangle playerRect = player.getBounds();
 
-        // 1. CEK PELURU (Pake While biar aman hapus-hapus)
+        // 1. CEK PELURU
         int i = 0;
         while (i < bullets.size()) {
             Bullet b = bullets.get(i);
             Rectangle bulletRect = b.getBounds();
-            boolean bulletRemoved = false; // Flag penanda biar flow rapi
+            boolean bulletRemoved = false; // Flag penanda peluru dihapus
 
-            // A. CEK TABRAKAN DENGAN OBSTACLE (BATU)
+            // A. CEK TABRAKAN DENGAN OBSTACLE
             int j = 0;
-            // Loop batu pake while, berhenti kalo batu abis ATAU peluru udah meledak
+            // Loop obstacle, berhenti kalo obstacle abis ATAU peluru udah meledak
             while (j < obstacles.size() && !bulletRemoved) { 
                 Obstacle o = obstacles.get(j);
                 if (bulletRect.intersects(o.getBounds())) {
                     if (b.isEnemy()) {
-                        // [FIX] Peluru musuh kena batu -> Hapus biasa (JANGAN panggil handleMissed)
-                        bullets.remove(i);
-                    } else {
-                        // [FIX] Peluru player kena batu -> Baru dihitung Missed (Ammo balik)
+                        // Peluru musuh kena box -> jadi miss dan ammo player nambah
                         handleMissedBullet(b, i);
+                    } else {
+                        // Peluru player kena box -> Hapus peluru
+                        bullets.remove(i);
                     }
-                    bulletRemoved = true; // Tandain udah kehapus
+                    bulletRemoved = true;
                 }
                 j++;
             }
-
-            // Kalo bullet udah kena batu, skip logic entity, lanjut loop berikutnya
-            // (Kita gak i++, karena list geser ke kiri, jadi index i sekarang diisi peluru baru)
             if (bulletRemoved) {
                 continue; 
             }
 
             // B. CEK TABRAKAN DENGAN ENTITY (PLAYER / MUSUH)
             if (b.isEnemy()) {
-                // --- Peluru Musuh vs Player ---
-                if (bulletRect.intersects(playerRect)) {
-                    // [BARU] Bunyiin SFX Mati Dulu (Index 4)
+                if (bulletRect.intersects(playerRect)) { // jika player kena peluru musuh
+                    // Bunyiin SFX Mati (Index 3)
                     sfxModel.setFile(3);
                     sfxModel.play();
                     
-                    triggerGameOver();
+                    triggerGameOver(); //game over
                     return; // Keluar method biar gak error
                 }
-            } else {
-                // --- Peluru Player vs Musuh ---
+            } else { // jika musuh ketembak
                 int k = 0;
                 while (k < enemies.size() && !bulletRemoved) {
                     Enemy en = enemies.get(k);
@@ -377,16 +387,15 @@ public class Model {
                         en.setPosY(-999); // Lempar musuh jauh-jauh
                         bullets.remove(i); // Hapus peluru
                         
+                        // Tambah skor player
                         score += 10;
                         player.setScore(score);
                         
-                        bulletRemoved = true;
+                        bulletRemoved = true; // hapus peluru
                     }
                     k++;
                 }
             }
-
-            // Kita cuma geser ke peluru berikutnya (i++) KALO peluru sekarang GAK dihapus.
             if (!bulletRemoved) {
                 i++;
             }
@@ -396,62 +405,74 @@ public class Model {
         int m = 0;
         while (m < enemies.size()) {
             Enemy en = enemies.get(m);
-            if (en.getBounds().intersects(playerRect)) {
-                // [BARU] Bunyiin SFX Mati Dulu
+            if (en.getBounds().intersects(playerRect)) { // kalo tabrakan mati
+                // Bunyiin SFX Mati (Index 3)
                 sfxModel.setFile(3);
                 sfxModel.play();
 
-                triggerGameOver();
+                triggerGameOver(); //game over
                 return;
             }
             m++;
         }
     }
 
+    // metode buat handle peluru musuh yang meleset
     private void handleMissedBullet(Bullet b, int indexToRemove) {
-        missedBulletsCounter++;
-        player.setMissedBullets(missedBulletsCounter);
-        player.setAmmo(player.getAmmo() + 1);
+        missedBulletsCounter++; // tambah counter peluru meleset
+        player.setMissedBullets(missedBulletsCounter); // update di player juga
+        player.setAmmo(player.getAmmo() + 1); // kasih 1 peluru ke player
         
         if (indexToRemove >= 0 && indexToRemove < bullets.size()) {
             bullets.remove(indexToRemove);
         }
     }
 
+    // metode buat bersihin objek yang udah keluar layar
     private void cleanupObjects() {
         bullets.removeIf(b -> b.getPosY() < -100 || b.getPosY() > frameHeight + 100 || b.getPosX() < -50 || b.getPosX() > frameWidth + 50);
         enemies.removeIf(e -> e.getPosY() < -100);
     }
 
+    // Metode buat nge-trigger game over
     private void triggerGameOver() {
         gameOver = true;
         saveDataToDB();
     }
 
+    // Metode buat nyimpen data player ke database
     public void saveDataToDB() {
+        java.sql.ResultSet rs = null;
         try {
-            String check = "SELECT * FROM tbenefit WHERE username = '" + username + "'";
-            if (db.executeQuery(check).next()) {
+            String check = "SELECT * FROM tbenefit WHERE username = '" + username + "'"; // Cek ada atau nggak
+            rs = db.executeQuery(check);
+            
+            if (rs.next()) { // Kalo ADA, update data lama
                 String sql = "UPDATE tbenefit SET skor = " + score + 
                              ", missed_bullets = " + missedBulletsCounter + 
                              ", ammo = " + player.getAmmo() + 
                              " WHERE username = '" + username + "'";
                 db.insertUpdateDeleteQuery(sql);
-            } else {
+            } else { // Kalo GA ADA, insert data baru
                 String sql = "INSERT INTO tbenefit VALUES ('" + username + "', " + 
                              score + ", " + missedBulletsCounter + ", " + player.getAmmo() + ")";
                 db.insertUpdateDeleteQuery(sql);
             }
         } catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            // tutup ResultSet
+            try {
+                if (rs != null) rs.getStatement().close();
+            } catch (Exception ex) { ex.printStackTrace(); }
         }
     }
 
-    public void setGameStarted(boolean started) {
+    public void setGameStarted(boolean started) { // set status game started
         this.gameStarted = started;
     }
 
-    public void togglePause() {
+    public void togglePause() { // toggle status pause
         this.isPaused = !this.isPaused;
     }
 

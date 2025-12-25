@@ -6,7 +6,12 @@ import view.MainFrame;
 import java.awt.event.*;
 import javax.swing.Timer;
 
-public class GamePresenter implements ActionListener, KeyListener, MouseListener {
+// kelas GamePresenter adalah presenter untuk menghubungkan Model dan GamePanel (View)
+// kelas ini bertanggung jawab untuk mengelola logika game, input pengguna, dan pembaruan tampilan
+
+public class GamePresenter implements ActionListener, KeyListener, MouseListener 
+{
+    // Atribut buat nyimpen referensi ke Model, View, dan MainFrame
     private Model model;
     private GamePanel view;
     private MainFrame mainFrame;
@@ -14,6 +19,7 @@ public class GamePresenter implements ActionListener, KeyListener, MouseListener
     private Timer enemySpawner;
     private Sound sfx = new Sound();
 
+    // metode konstruktor buat inisialisasi GamePresenter dengan Model, View, dan MainFrame
     public GamePresenter(Model model, GamePanel view, MainFrame mainFrame) {
         this.model = model;
         this.view = view;
@@ -30,6 +36,7 @@ public class GamePresenter implements ActionListener, KeyListener, MouseListener
         });
     }
 
+    // metode buat memulai permainan
     public void startGame() {
         model.setGameStarted(true);
         gameLoop.start();
@@ -37,15 +44,16 @@ public class GamePresenter implements ActionListener, KeyListener, MouseListener
         view.requestFocus(); // Minta fokus buat keyboard
     }
 
+    // metode buat menghentikan permainan
     public void stopGame() {
         if (gameLoop != null) gameLoop.stop();
         if (enemySpawner != null) enemySpawner.stop();
     }
 
-    // --- GAME LOOP (Jantungnya Game) ---
+    // metode buat GAME LOOP (Jantungnya Game)
     @Override
     public void actionPerformed(ActionEvent e) {
-        if (model.isGameOver()) {
+        if (model.isGameOver()) { // KALO GAME OVER
             mainFrame.stopMusic();
             // KIRIM DATA TERAKHIR SEBELUM STOP
             updateView(); 
@@ -54,24 +62,21 @@ public class GamePresenter implements ActionListener, KeyListener, MouseListener
             return;
         }
 
-        if (model.isPaused()) {
+        if (model.isPaused()) { // KALO PAUSE
             // KIRIM DATA BIAR TAMPILAN GAK ILANG PAS PAUSE
             updateView();
             view.repaint();
             return;
         }
 
-        model.updateGameLogic(); 
-        
-        // [WAJIB] UPDATE DATA VIEW TIAP FRAME
-        updateView();
-        
-        view.repaint();
+        model.updateGameLogic(); // update logika game di Model
+        updateView(); // kirim data terbaru ke View
+        view.repaint(); // minta View repaint ulang
     }
 
-    // METHOD BARU BUAT TRANSFER DATA
+    // metode buat ngirim data dari Model ke View
     private void updateView() {
-        // 1. Kirim Aset (Cukup sekali sebenernya, tapi disini gapapa biar aman)
+        // 1. Kirim Aset
         view.setGameAssets(
             model.getBgImage(), model.getUiBoard(), model.getUiButton(), model.getPixelFont()
         );
@@ -99,48 +104,48 @@ public class GamePresenter implements ActionListener, KeyListener, MouseListener
         view.setPressedButtonIndex(model.getPressedButtonIndex());
     }
 
-    // --- INPUT LISTENER (Keyboard & Mouse) ---
-    // Presenter yang dengerin, terus nyuruh Model gerak
+    // INPUT LISTENER (Keyboard & Mouse)
     @Override
-    public void keyPressed(KeyEvent e) {
+    public void keyPressed(KeyEvent e) { // Tangkap Tombol yang Ditekan
         int key = e.getKeyCode();
 
         // Pastikan game sudah mulai & gak pause
         if (model.isGameOver() || model.isPaused()) return;
 
         // Oper perintah ke Model
-        if (key == KeyEvent.VK_W || key == KeyEvent.VK_UP) model.getPlayer().setVelY(-5);
-        if (key == KeyEvent.VK_S || key == KeyEvent.VK_DOWN) model.getPlayer().setVelY(5);
-        if (key == KeyEvent.VK_A || key == KeyEvent.VK_LEFT) model.getPlayer().setVelX(-5);
-        if (key == KeyEvent.VK_D || key == KeyEvent.VK_RIGHT) model.getPlayer().setVelX(5);
+        if (key == KeyEvent.VK_W || key == KeyEvent.VK_UP) model.getPlayer().setVelY(-5); // Pindah ke atas
+        if (key == KeyEvent.VK_S || key == KeyEvent.VK_DOWN) model.getPlayer().setVelY(5); // Pindah ke bawah
+        if (key == KeyEvent.VK_A || key == KeyEvent.VK_LEFT) model.getPlayer().setVelX(-5); // Pindah ke kiri
+        if (key == KeyEvent.VK_D || key == KeyEvent.VK_RIGHT) model.getPlayer().setVelX(5); // Pindah ke kanan
         
-        if (key == KeyEvent.VK_SPACE) model.togglePause();
+        if (key == KeyEvent.VK_SPACE) model.togglePause(); // Toggle Pause
     }
 
     @Override
-    public void keyReleased(KeyEvent e) {
+    public void keyReleased(KeyEvent e) { // Tangkap Tombol yang Dilepas
         int key = e.getKeyCode();
-        if (key == KeyEvent.VK_W || key == KeyEvent.VK_S || key == KeyEvent.VK_UP || key == KeyEvent.VK_DOWN) model.getPlayer().setVelY(0);
-        if (key == KeyEvent.VK_A || key == KeyEvent.VK_D || key == KeyEvent.VK_LEFT || key == KeyEvent.VK_RIGHT) model.getPlayer().setVelX(0);
+        if (key == KeyEvent.VK_W || key == KeyEvent.VK_S || key == KeyEvent.VK_UP || key == KeyEvent.VK_DOWN) model.getPlayer().setVelY(0); // Stop gerak vertikal
+        if (key == KeyEvent.VK_A || key == KeyEvent.VK_D || key == KeyEvent.VK_LEFT || key == KeyEvent.VK_RIGHT) model.getPlayer().setVelX(0); // Stop gerak horizontal
     }
 
     @Override
-    public void mousePressed(MouseEvent e) {
+    public void mousePressed(MouseEvent e) { // Tangkap Klik Mouse
         int mx = e.getX();
         int my = e.getY();
 
-        // 1. LOGIC KLIK PAS GAME OVER (Menu Khusus: Cuma 1 Tombol)
+        // 1. LOGIC KLIK PAS GAME OVER
         if (model.isGameOver()) {
+            // Tombol Back to Menu
             int centerX = view.getWidth() / 2;
             int centerY = view.getHeight() / 2;
-            int boardH = 400; // Tinggi board Game Over (sesuai GamePanel)
+            int boardH = 400;
             int boardY = centerY - (boardH / 2);
 
             int btnW = 220; // Lebar tombol Game Over
             int btnH = 60;
             int btnY = boardY + 260; // Posisi Y tombol Back to Menu
 
-            // Cek Kena Tombol Back to Menu?
+            // Cek Kena Tombol Back to Menu
             if (mx >= centerX - (btnW / 2) && mx <= centerX + (btnW / 2) && my >= btnY && my <= btnY + btnH) {
                 model.setPressedButtonIndex(2); // Index 2 = Quit/Back
                 view.repaint();
@@ -148,8 +153,7 @@ public class GamePresenter implements ActionListener, KeyListener, MouseListener
             return;
         }
 
-        // 2. LOGIC KLIK PAS PAUSE (Menu Standar: 2 Tombol)
-        // [INI YANG KETINGGALAN TADI]
+        // 2. LOGIC KLIK PAS PAUSE
         if (model.isPaused()) {
             int centerX = view.getWidth() / 2;
             int centerY = view.getHeight() / 2;
@@ -158,7 +162,7 @@ public class GamePresenter implements ActionListener, KeyListener, MouseListener
             int btnW = 200;
             int btnH = 60;
 
-            // Tombol 1: RESUME (Koordinat Y = boardY + 140)
+            // Tombol 1: RESUME
             int btn1Y = boardY + 140;
             if (mx >= centerX - (btnW / 2) && mx <= centerX + (btnW / 2) && my >= btn1Y && my <= btn1Y + btnH) {
                 model.setPressedButtonIndex(1); // Index 1 = Resume
@@ -166,7 +170,7 @@ public class GamePresenter implements ActionListener, KeyListener, MouseListener
                 return;
             }
 
-            // Tombol 2: BACK TO MENU (Koordinat Y = boardY + 220)
+            // Tombol 2: BACK TO MENU
             int btn2Y = boardY + 220;
             if (mx >= centerX - (btnW / 2) && mx <= centerX + (btnW / 2) && my >= btn2Y && my <= btn2Y + btnH) {
                 model.setPressedButtonIndex(2); // Index 2 = Back
@@ -190,7 +194,7 @@ public class GamePresenter implements ActionListener, KeyListener, MouseListener
     }
 
     @Override
-    public void mouseReleased(MouseEvent e) {
+    public void mouseReleased(MouseEvent e) { // Tangkap Lepas Klik Mouse
         if (model.getPressedButtonIndex() != 0) {
             
             // Tombol Resume (Khusus Pause Menu)
@@ -198,7 +202,7 @@ public class GamePresenter implements ActionListener, KeyListener, MouseListener
                 model.togglePause();
             } 
             
-            // TOMBOL BACK TO MENU (Buat Game Over & Pause)
+            // Tombol BACK TO MENU (Buat Game Over & Pause)
             else if (model.getPressedButtonIndex() == 2) {
                 stopGame(); 
                 model.saveDataToDB(); // SAVE OTOMATIS
@@ -210,7 +214,7 @@ public class GamePresenter implements ActionListener, KeyListener, MouseListener
         }
     }
 
-    // Method interface lain (kosongin aja)
+    // Method interface lain
     public void keyTyped(KeyEvent e) {}
     public void mouseClicked(MouseEvent e) {}
     public void mouseEntered(MouseEvent e) {}

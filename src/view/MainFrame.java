@@ -36,23 +36,35 @@ public class MainFrame extends JFrame {
     }
 
     public void switchToGame(String username) {
-        // 1. Bikin Model
+        // Kalau gamePanel udah pernah dibuat, copot dulu dari mainPanel
+        if (gamePanel != null) {
+            mainPanel.remove(gamePanel);
+            gamePanel = null; // Bantu GC bersihin memori
+        }
+        
+        // 2. Bikin Model Baru
         model = new Model(username);
         
-        // 2. Bikin View (SEKARANG KOSONGAN)
-        gamePanel = new GamePanel(); // [FIX] Hapus parameter model
+        // 3. Bikin View Baru
+        gamePanel = new GamePanel(); 
         
-        // 3. Bikin Presenter
+        // 4. Bikin Presenter Baru
         GamePresenter presenter = new GamePresenter(model, gamePanel, this);
         
-        // 4. Setup Listener
+        // 5. Setup Listener
         gamePanel.addKeyListener(presenter);
         gamePanel.addMouseListener(presenter);
         gamePanel.setFocusable(true);
 
         playMusic(1);
 
-        mainPanel.add(gamePanel, "Game");
+        // 6. ADD PANEL BARU
+        mainPanel.add(gamePanel, "Game"); // Add yang baru
+        
+        // Refresh Tampilan biar CardLayout sadar ada perubahan
+        mainPanel.revalidate();
+        mainPanel.repaint();
+        
         cardLayout.show(mainPanel, "Game");
         gamePanel.requestFocusInWindow();
         

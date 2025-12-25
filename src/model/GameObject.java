@@ -1,13 +1,13 @@
 package model;
 import java.awt.*;
 
-public abstract class GameObject 
+public abstract class GameObject // kelas abstrak untuk objek game
 {
     // Pake protected biar subclass bisa akses langsung
-    protected int posX, posY;
-    protected int width, height;
-    protected int velX, velY; // Butuh X juga buat gerak Kiri-Kanan
-    protected Image image;
+    protected int posX, posY; // posisi
+    protected int width, height; // ukuran
+    protected int velX, velY; // kecepatan gerak
+    protected Image image; // gambar objek
 
     public GameObject(int posX, int posY, int width, int height, Image image) {
         this.posX = posX;
@@ -37,7 +37,7 @@ public abstract class GameObject
     public void setVelX(int velX) { this.velX = velX; }
     public void setVelY(int velY) { this.velY = velY; }
 
-    public void update() {
+    public void update() { // update posisi berdasarkan kecepatan
         posX += velX;
         posY += velY;
     }
