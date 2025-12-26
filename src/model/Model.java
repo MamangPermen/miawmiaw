@@ -479,7 +479,7 @@ public class Model
     }
 
     // GETTER & SETTER buat akses data dari Presenter & View
-    // Buat ambil skor & username (yang bikin error tadi)
+    // Buat ambil skor & username
     public int getScore() { return score; }
     public String getUsername() { return username; }
 
@@ -487,13 +487,13 @@ public class Model
     public boolean isGameOver() { return gameOver; }
     public boolean isPaused() { return isPaused; }
     
-    // Buat ambil aset gambar (biar bisa dikirim ke View)
+    // Buat ambil aset gambar
     public Image getBgImage() { return bgImage; }
     public Image getUiBoard() { return uiBoard; }
     public Image getUiButton() { return uiButton; }
     public Font getPixelFont() { return pixelFont; }
 
-    // Buat ambil objek game (biar View bisa gambar)
+    // Buat ambil objek game
     public Player getPlayer() { return player; }
     public ArrayList<Enemy> getEnemies() { return enemies; }
     public ArrayList<Bullet> getBullets() { return bullets; }

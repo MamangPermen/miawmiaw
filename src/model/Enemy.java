@@ -19,6 +19,7 @@ public class Enemy extends GameObject // kelas untuk musuh turunan dari GameObje
         if (shootCooldown > 0) shootCooldown--;
     }
 
+    // Reset cooldown ke nilai awal
     public void resetCooldown() {
         shootCooldown = 90; // Tiap 1 detik baru bisa nembak lagi
     }

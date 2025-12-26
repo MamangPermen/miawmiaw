@@ -12,7 +12,7 @@ public class Database
     public Database() {
         try {
             connection = DriverManager.getConnection(
-                "jdbc:mysql://localhost:3306/db_tmd", // sesuaikan nama db
+                "jdbc:mysql://localhost:3306/db_tmd",
                 "root",
                 "");
         } catch (SQLException e) {
@@ -26,7 +26,6 @@ public class Database
             // Bikin Statement BARU setiap kali query dipanggil
             Statement stmt = connection.createStatement(); 
             return stmt.executeQuery(sql);
-            // Nanti Statement ini bakal ditutup sama Model/Presenter lewat rs.getStatement().close()
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }

@@ -26,7 +26,7 @@ public class GamePresenter implements IGamePresenter, ActionListener, KeyListene
         this.view = view;
         this.mainFrame = mainFrame;
 
-        // Setup Timer Game Loop
+        // Setup Timer Game Loop menggunakan timer karena Swing lebih aman buat GUI dan event handling
         gameLoop = new Timer(1000 / 60, this); 
         
         // Setup Timer Spawn Musuh
@@ -152,11 +152,11 @@ public class GamePresenter implements IGamePresenter, ActionListener, KeyListene
         }
 
         // LOGIC GAMEPLAY (Nembak)
-        if (e.getButton() == MouseEvent.BUTTON1) {
-            if (model.getPlayer().getAmmo() > 0) {
-                model.shootPlayerBullet(mx, my); 
-                sfx.setFile(2);
-                sfx.play();
+        if (e.getButton() == MouseEvent.BUTTON1) { // Kalo klik kiri
+            if (model.getPlayer().getAmmo() > 0) { // Cek kalo masih ada peluru
+                model.shootPlayerBullet(mx, my); // Arahkan tembakan ke posisi mouse
+                sfx.setFile(2); // sound effect nembak
+                sfx.play(); // mainkan sound
             }
         }
     }

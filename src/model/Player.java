@@ -30,7 +30,7 @@ public class Player extends GameObject // kelas untuk player turunan dari GameOb
         else if (velX < 0) {
             facingRight = false;
         }
-        // Kalo DIAM (velX == 0) -> JANGAN UBAH APA-APA (Biar inget terakhir kemana)
+        // Kalo DIAM (velX == 0)
     }
 
     // Getter Setter Data Player
