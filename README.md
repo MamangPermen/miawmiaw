@@ -1,7 +1,6 @@
 ### Compile & Launch
 ```bash
 # Create bin directory & copy assets
-mkdir bin
 xcopy src\assets bin\assets /s /i /y
 
 # Compile Java files
@@ -11,7 +10,7 @@ javac -d bin -cp "src/lib/*" src/model/*.java src/view/*.java src/presenter/*.ja
 java -cp "bin;src/lib/*" Main
 ```
 
-## 🎮 Controls
+## Controls
 | Key / Input | Action |
 | :--- | :--- |
 | **W** / **Up Arrow** | Move Up |
@@ -21,7 +20,7 @@ java -cp "bin;src/lib/*" Main
 | **Left Mouse Click** | Shoot |
 | **Space** | Pause / Resume Game |
 
-## 📜 Credits
+## Credits
 
 This project uses high-quality assets from the following creators. We would like to express our gratitude for their contributions to the game development community:
 
