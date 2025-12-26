@@ -10,7 +10,7 @@ import model.Enemy;
 import model.Obstacle;
 import model.Player;
 
-// Kelas gamepanel adalah panel khusus buat ngegambar game
+// Kelas gamepanel adalah panel khusus buat ngegambar in game
 // kelas ini berfungsi sebagai wadah visualisasi game
 
 public class GamePanel extends JPanel 
@@ -22,8 +22,8 @@ public class GamePanel extends JPanel
     private ArrayList<Obstacle> obstacles;
     
     // Aset Gambar (Diset sekali aja dari Presenter)
-    private Image bgImage, uiBoard, uiButton;
-    private Font pixelFont;
+    private Image bgImage, uiBoard, uiButton; // aset UI
+    private Font pixelFont; // font pixel
     
     // Data Status
     private String username = "";
@@ -33,9 +33,9 @@ public class GamePanel extends JPanel
     private int kills = 0;
     
     // State Game
-    private boolean isGameOver = false;
-    private boolean isPaused = false;
-    private int pressedButtonIndex = 0;
+    private boolean isGameOver = false; // status game over
+    private boolean isPaused = false; // status pause
+    private int pressedButtonIndex = 0; // index tombol yang ditekan (buat efek tombol)
 
     // Konstruktor
     public GamePanel() {

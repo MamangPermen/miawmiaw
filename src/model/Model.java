@@ -40,8 +40,8 @@ public class Model
     int missedBulletsCounter = 0;
 
     // Lainnya
-    int pressedButtonIndex = 0;
-    private Sound sfxModel = new Sound();
+    int pressedButtonIndex = 0; // index tombol yang ditekan
+    private Sound sfxModel = new Sound(); // buat mainin SFX
 
     // KONSTRUKTOR
     public Model(String username) {
@@ -135,7 +135,7 @@ public class Model
             return; 
         }
 
-        // 1. UPDATE PLAYER
+        // UPDATE PLAYER
         int pPrevX = player.getPosX();
         int pPrevY = player.getPosY();
         player.update();
@@ -155,7 +155,7 @@ public class Model
             }
         }
         
-        // 2. UPDATE MUSUH
+        // UPDATE MUSUH
         for (Enemy en : enemies) {
             int ePrevX = en.getPosX();
             int ePrevY = en.getPosY(); 
@@ -191,7 +191,7 @@ public class Model
             }
         }
 
-        // 3. UPDATE PELURU
+        // UPDATE PELURU
         for (int i = 0; i < bullets.size(); i++) {
             Bullet b = bullets.get(i);
             b.update(); 
@@ -210,7 +210,7 @@ public class Model
             }
         }
 
-        // 4. CEK TABRAKAN LAINNYA
+        // CEK TABRAKAN LAINNYA
         checkCollisions();
         cleanupObjects();
     }
@@ -229,7 +229,7 @@ public class Model
         Random rand = new Random();
         obstacles.clear(); // Pastikan list bersih sebelum mulai
         
-        // 1. Tentukan Jumlah box (4-7)
+        // Tentukan Jumlah box (4-7)
         int count = rand.nextInt(3) + 4;
 
         int attempts = 0;
@@ -239,7 +239,7 @@ public class Model
             // ukuran box random antara 50px sampai 120px
             int size = rand.nextInt(71) + 80; 
 
-            // 3. Tentukan Posisi Random
+            // Tentukan Posisi Random
             int x = rand.nextInt(frameWidth - size - 100) + 50;
             int y = rand.nextInt(frameHeight - size - 100) + 50;
             
@@ -337,14 +337,14 @@ public class Model
     private void checkCollisions() {
         Rectangle playerRect = player.getBounds();
 
-        // 1. CEK PELURU
+        // CEK PELURU
         int i = 0;
         while (i < bullets.size()) {
             Bullet b = bullets.get(i);
             Rectangle bulletRect = b.getBounds();
             boolean bulletRemoved = false; // Flag penanda peluru dihapus
 
-            // A. CEK TABRAKAN DENGAN OBSTACLE
+            // CEK TABRAKAN DENGAN OBSTACLE
             int j = 0;
             // Loop obstacle, berhenti kalo obstacle abis ATAU peluru udah meledak
             while (j < obstacles.size() && !bulletRemoved) { 
@@ -365,7 +365,7 @@ public class Model
                 continue; 
             }
 
-            // B. CEK TABRAKAN DENGAN ENTITY (PLAYER / MUSUH)
+            // CEK TABRAKAN DENGAN ENTITY (PLAYER / MUSUH)
             if (b.isEnemy()) {
                 if (bulletRect.intersects(playerRect)) { // jika player kena peluru musuh
                     // Bunyiin SFX Mati (Index 3)
@@ -401,7 +401,7 @@ public class Model
             }
         }
         
-        // 2. CEK TABRAKAN BADAN (Player vs Musuh)
+        // CEK TABRAKAN BADAN (Player vs Musuh)
         int m = 0;
         while (m < enemies.size()) {
             Enemy en = enemies.get(m);

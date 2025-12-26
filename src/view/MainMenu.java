@@ -5,8 +5,9 @@ import java.awt.*;
 import java.awt.event.MouseAdapter; 
 import java.io.InputStream;
 
-public class MainMenu extends JPanel {
-    private JTextField usernameField;
+public class MainMenu extends JPanel 
+{
+    private JTextField usernameField; // Input field buat username
     
     // Aset
     private Image bgImage, boardImage, btnImage;
@@ -25,15 +26,17 @@ public class MainMenu extends JPanel {
     public int scrollTrackY, scrollTrackHeight;
     public final int maxVisibleRows = 7; 
 
+    // Konstruktor
     public MainMenu() {
         this.setLayout(null); 
-        loadAssets();
-        setupComponents();
-        // Listener udah dihapus, nanti dipasang dari Presenter
+        loadAssets(); // muat aset gambar & font
+        setupComponents(); // setup komponen swing
     }
 
+    // metode buat muat aset gambar & font
     private void loadAssets() {
         try {
+            // Muat Gambar
             bgImage = new ImageIcon(getClass().getResource("/assets/Background.png")).getImage();
             boardImage = new ImageIcon(getClass().getResource("/assets/ui_board.png")).getImage();
             btnImage = new ImageIcon(getClass().getResource("/assets/ui_button.png")).getImage();
@@ -44,12 +47,13 @@ public class MainMenu extends JPanel {
                 GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
                 ge.registerFont(pixelFont);
             }
-        } catch (Exception e) {
+        } catch (Exception e) { // fallback kalo gagal
             pixelFont = new Font("SansSerif", Font.BOLD, 24);
             e.printStackTrace();
         }
     }
 
+    // metode buat setup komponen swing
     private void setupComponents() {
         usernameField = new JTextField(15);
         // Set font pixel kalo berhasil dimuat
@@ -58,6 +62,7 @@ public class MainMenu extends JPanel {
         } else { // Fallback kalo gagal
             usernameField.setFont(new Font("SansSerif", Font.BOLD, 20));
         }
+        // Set bounds, background, dan border
         usernameField.setBounds(0, 0, 0, 0); 
         usernameField.setBackground(new Color(255, 255, 255, 220)); 
         usernameField.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
@@ -73,49 +78,50 @@ public class MainMenu extends JPanel {
         }
     }
 
+    // metode buat render tampilan
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
 
-        // 1. Background & Gelap
+        // Background & Gelap
         if (bgImage != null) g.drawImage(bgImage, 0, 0, 1024, 768, null);
         g.setColor(new Color(0, 0, 0, 100)); 
         g.fillRect(0, 0, getWidth(), getHeight());
 
-        // 2. Judul (Font 60f)
+        // Judul
         g.setFont(getFontSafe(60f));
         g.setColor(Color.WHITE);
         drawCenteredString(g, "STRIKE VAMPCATS", getWidth() / 2, 80);
 
-        // 3. Board
+        // Board
         boardW = 600;
         boardH = 450;
         boardX = (getWidth() - boardW) / 2;
         boardY = 120;
         if (boardImage != null) g.drawImage(boardImage, boardX, boardY, boardW, boardH, null);
 
-        // 4. Header Board (Font 40f & 22f)
+        // Header Board
         g.setFont(getFontSafe(40f));
         drawCenteredString(g, "HALL OF FAME", getWidth() / 2, boardY + 35);
-
+        // Sub-header Tabel
         g.setFont(getFontSafe(22f));
         g.setColor(Color.YELLOW);
-        int startY = boardY + 110;
+        int startY = boardY + 110; // posisi Y awal tabel
         g.drawString("USERNAME", boardX + 60, startY);
         g.drawString("SCORE", boardX + 250, startY);
         g.drawString("MISSED", boardX + 350, startY);
         g.drawString("AMMO LEFT", boardX + 460, startY);
-        
+
         g.setColor(Color.WHITE);
         g.drawLine(boardX + 50, startY + 10, boardX + boardW - 50, startY + 10);
 
-        // 5. ISI TABEL
+        // ISI TABEL
         if (leaderboardData != null) {
             int rowY = startY + 40;
             // Gunakan scrollOffset dari Presenter
             int endIndex = Math.min(leaderboardData.length, scrollOffset + maxVisibleRows);
 
-            for (int i = scrollOffset; i < endIndex; i++) {
+            for (int i = scrollOffset; i < endIndex; i++) { // Loop baris yang mau ditampilin
                 Object[] row = leaderboardData[i];
                 
                 // Highlight Selection
@@ -124,7 +130,7 @@ public class MainMenu extends JPanel {
                     g.fillRect(boardX + 50, rowY - 25, boardW - 100, 30);
                 }
 
-                // Teks Baris (Masih pake Font 22f dari langkah sebelumnya)
+                // Teks Baris
                 g.setColor(Color.WHITE);
                 g.drawString(row[0].toString(), boardX + 60, rowY);
                 g.drawString(row[1].toString(), boardX + 250, rowY);
@@ -134,7 +140,7 @@ public class MainMenu extends JPanel {
                 rowY += 35; 
             }
             
-            // --- 6. SCROLL BAR (VISUAL SAJA, LOGIC DI PRESENTER) ---
+            // SCROLL BAR
             if (leaderboardData.length > maxVisibleRows) {
                 int trackX = boardX + boardW - 25;
                 scrollTrackY = boardY + 110;  
@@ -163,18 +169,19 @@ public class MainMenu extends JPanel {
             }
         }
 
-        // 7. INPUT FIELD (Font 20f)
+        // INPUT FIELD
         int inputY = boardY + boardH + 20;
         g.setFont(getFontSafe(20f));
         g.setColor(Color.WHITE);
         g.drawString("Username:", boardX + 80, inputY + 20);
         usernameField.setBounds(boardX + 200, inputY, 200, 30);
 
-        // 8. TOMBOL (Font 24f diatur di dalem helper)
+        // 8. TOMBOL
         drawButton(g, "PLAY", 1, inputY + 50, true);
         drawButton(g, "QUIT", 2, inputY + 50, false);
     }
 
+    // metode bantu buat gambar tombol
     private void drawButton(Graphics g, String text, int type, int y, boolean isLeft) {
         int w = 180;
         int h = 55;
@@ -194,31 +201,31 @@ public class MainMenu extends JPanel {
         }
     }
 
+    // metode bantu buat gambar string di tengah
     private void drawCenteredString(Graphics g, String text, int x, int y) {
         FontMetrics fm = g.getFontMetrics();
         g.drawString(text, x - (fm.stringWidth(text) / 2), y);
     }
 
-    // === METHOD KHUSUS (Dipanggil Presenter) ===
-    // 1. Biar Presenter bisa masang kuping (Listener)
+    // Metode buat nambahin Mouse Listener dari Presenter
     public void addMouseListenerToPanel(MouseAdapter listener) {
         this.addMouseListener(listener);
         this.addMouseMotionListener(listener);
         this.addMouseWheelListener(listener);
     }
 
-    // 2. Setter buat Update Tampilan
+    // Setter buat Update Tampilan
     public void setScrollOffset(int offset) { this.scrollOffset = offset; repaint(); }
     public void setSelectedRowIndex(int index) { this.selectedRowIndex = index; repaint(); }
     public void setPressedButtonType(int type) { this.pressedButtonType = type; repaint(); }
     public void setIsDraggingScroll(boolean isDragging) { this.isDraggingScroll = isDragging; repaint(); }
     
-    // 3. Getter buat State & Data
+    // Getter buat State & Data
     public Object[][] getLeaderboardData() { return leaderboardData; }
     public int getScrollOffset() { return scrollOffset; }
     public JTextField getUsernameField() { return usernameField; }
 
-    // 4. Setter Data Awal
+    // Setter Data Awal
     public void setLeaderboardData(Object[][] data) {
         this.leaderboardData = data;
         this.scrollOffset = 0;

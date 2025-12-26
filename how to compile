@@ -1,6 +1,8 @@
+Compile
 javac -d bin -cp ".;lib/*" src/model/*.java src/view/*.java src/presenter/*.java src/Main.java
 
 Copy Aset (Command Line version)
 xcopy "src\assets" "bin\assets" /E /I /Y
 
+run
 java -cp "bin;lib/*" Main
