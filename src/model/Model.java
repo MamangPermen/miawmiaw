@@ -5,7 +5,9 @@ import java.util.*;
 import javax.swing.ImageIcon;
 
 // Kelas Model adalah kelas utama yang menyimpan semua data dan logika game
-// Kelas ini menyediakan metode untuk mengupdate logika game, spawn musuh, dan menyimpan/memuat data dari database
+// Kelas ini bertanggung jawab menyimpan state game (posisi player, musuh, skor),
+// menghitung fisika (pergerakan & tabrakan), serta berinteraksi dengan Database 
+// untuk menyimpan/memuat progress user.
 
 public class Model 
 {     

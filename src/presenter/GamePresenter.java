@@ -1,26 +1,27 @@
 package presenter;
 
 import model.*;
-import view.GamePanel;
+import view.IGamePanel;
 import view.MainFrame;
 import java.awt.event.*;
 import javax.swing.Timer;
 
-// kelas GamePresenter adalah presenter untuk menghubungkan Model dan GamePanel (View)
-// kelas ini bertanggung jawab untuk mengelola logika game, input pengguna, dan pembaruan tampilan
+// Kelas GamePresenter adalah pengendali utama alur permainan (Game Loop).
+// Kelas ini bertanggung jawab menangani input user (Keyboard/Mouse), memperbarui
+// logika Model secara berkala (Tick), dan menyinkronkan data Model ke View (Render).
 
-public class GamePresenter implements ActionListener, KeyListener, MouseListener 
+public class GamePresenter implements IGamePresenter, ActionListener, KeyListener, MouseListener 
 {
     // Atribut buat nyimpen referensi ke Model, View, dan MainFrame
     private Model model;
-    private GamePanel view;
+    private IGamePanel view;
     private MainFrame mainFrame;
     private Timer gameLoop;
     private Timer enemySpawner;
     private Sound sfx = new Sound();
 
     // metode konstruktor buat inisialisasi GamePresenter dengan Model, View, dan MainFrame
-    public GamePresenter(Model model, GamePanel view, MainFrame mainFrame) {
+    public GamePresenter(Model model, IGamePanel view, MainFrame mainFrame) {
         this.model = model;
         this.view = view;
         this.mainFrame = mainFrame;
@@ -29,14 +30,19 @@ public class GamePresenter implements ActionListener, KeyListener, MouseListener
         gameLoop = new Timer(1000 / 60, this); 
         
         // Setup Timer Spawn Musuh
-        enemySpawner = new Timer(2000, e -> {
+        enemySpawner = new Timer(2000, e -> { // musuh spawn tiap 2 detik
             if (!model.isGameOver() && !model.isPaused()) {
                 model.spawnEnemy(); 
             }
         });
+
+        // Pasang Listener Input
+        this.view.addKeyListener(this);
+        this.view.addMouseListener(this);
     }
 
     // metode buat memulai permainan
+    @Override
     public void startGame() {
         model.setGameStarted(true);
         gameLoop.start();
@@ -45,6 +51,7 @@ public class GamePresenter implements ActionListener, KeyListener, MouseListener
     }
 
     // metode buat menghentikan permainan
+    @Override
     public void stopGame() {
         if (gameLoop != null) gameLoop.stop();
         if (enemySpawner != null) enemySpawner.stop();
@@ -76,18 +83,18 @@ public class GamePresenter implements ActionListener, KeyListener, MouseListener
 
     // metode buat ngirim data dari Model ke View
     private void updateView() {
-        // 1. Kirim Aset
+        // Kirim Aset
         view.setGameAssets(
             model.getBgImage(), model.getUiBoard(), model.getUiButton(), model.getPixelFont()
         );
         
-        // 2. Kirim Objek Game
+        // Kirim Objek Game
         view.setGameObjects(
             model.getPlayer(), model.getEnemies(), model.getBullets(), model.getObstacles()
         );
-        
-        // 3. Kirim Status & Statistik
-        // Hitung kills disini
+
+        // Kirim Status & Statistik
+        // Hitung kills
         int kills = model.getScore() / 10; 
         
         view.setGameStats(
@@ -99,8 +106,8 @@ public class GamePresenter implements ActionListener, KeyListener, MouseListener
             model.isGameOver(),
             model.isPaused()
         );
-        
-        // 4. Kirim Index Tombol
+
+        // Kirim Index Tombol
         view.setPressedButtonIndex(model.getPressedButtonIndex());
     }
 
@@ -129,64 +136,25 @@ public class GamePresenter implements ActionListener, KeyListener, MouseListener
     }
 
     @Override
-    public void mousePressed(MouseEvent e) { // Tangkap Klik Mouse
+    public void mousePressed(MouseEvent e) { 
         int mx = e.getX();
         int my = e.getY();
 
-        // 1. LOGIC KLIK PAS GAME OVER
-        if (model.isGameOver()) {
-            // Tombol Back to Menu
-            int centerX = view.getWidth() / 2;
-            int centerY = view.getHeight() / 2;
-            int boardH = 400;
-            int boardY = centerY - (boardH / 2);
-
-            int btnW = 220; // Lebar tombol Game Over
-            int btnH = 60;
-            int btnY = boardY + 260; // Posisi Y tombol Back to Menu
-
-            // Cek Kena Tombol Back to Menu
-            if (mx >= centerX - (btnW / 2) && mx <= centerX + (btnW / 2) && my >= btnY && my <= btnY + btnH) {
-                model.setPressedButtonIndex(2); // Index 2 = Quit/Back
+        // CEK MENU (Game Over / Pause)
+        if (model.isGameOver() || model.isPaused()) {
+            int btnIndex = view.getMenuButtonAt(mx, my);
+            
+            if (btnIndex != 0) {
+                model.setPressedButtonIndex(btnIndex);
                 view.repaint();
             }
-            return;
+            return; // Stop disini kalau lagi menu
         }
 
-        // 2. LOGIC KLIK PAS PAUSE
-        if (model.isPaused()) {
-            int centerX = view.getWidth() / 2;
-            int centerY = view.getHeight() / 2;
-            int boardH = 350; // Tinggi board Pause (Standar)
-            int boardY = centerY - (boardH / 2);
-            int btnW = 200;
-            int btnH = 60;
-
-            // Tombol 1: RESUME
-            int btn1Y = boardY + 140;
-            if (mx >= centerX - (btnW / 2) && mx <= centerX + (btnW / 2) && my >= btn1Y && my <= btn1Y + btnH) {
-                model.setPressedButtonIndex(1); // Index 1 = Resume
-                view.repaint();
-                return;
-            }
-
-            // Tombol 2: BACK TO MENU
-            int btn2Y = boardY + 220;
-            if (mx >= centerX - (btnW / 2) && mx <= centerX + (btnW / 2) && my >= btn2Y && my <= btn2Y + btnH) {
-                model.setPressedButtonIndex(2); // Index 2 = Back
-                view.repaint();
-                return;
-            }
-            return;
-        }
-
-        // 3. Logic Nembak (Cuma jalan kalo gak lagi Menu Game Over / Pause)
+        // LOGIC GAMEPLAY (Nembak)
         if (e.getButton() == MouseEvent.BUTTON1) {
-            // cek ammo dulu sebelum nembak
             if (model.getPlayer().getAmmo() > 0) {
-                model.shootPlayerBullet(mx, my); // player nembak
-
-                // Mainkan Sound Effect Nembak
+                model.shootPlayerBullet(mx, my); 
                 sfx.setFile(2);
                 sfx.play();
             }

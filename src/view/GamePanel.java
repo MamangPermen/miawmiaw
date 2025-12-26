@@ -10,10 +10,10 @@ import model.Enemy;
 import model.Obstacle;
 import model.Player;
 
-// Kelas gamepanel adalah panel khusus buat ngegambar in game
-// kelas ini berfungsi sebagai wadah visualisasi game
+// Kelas gamepanel adalah panel utama game.
+// Kelas ini bertanggung jawab menggambar seluruh aset game (background, entitas, HUD)
 
-public class GamePanel extends JPanel 
+public class GamePanel extends JPanel implements IGamePanel
 {    
     // Objek Game
     private Player player;
@@ -44,6 +44,7 @@ public class GamePanel extends JPanel
     }
 
     // metode buat nyetel aset game dari presenter
+    @Override
     public void setGameAssets(Image bg, Image board, Image btn, Font font) {
         this.bgImage = bg;
         this.uiBoard = board;
@@ -52,6 +53,7 @@ public class GamePanel extends JPanel
     }
 
     // metode buat nyetel objek game dari presenter
+    @Override
     public void setGameObjects(Player p, ArrayList<Enemy> e, ArrayList<Bullet> b, ArrayList<Obstacle> o) {
         this.player = p;
         this.enemies = e;
@@ -60,6 +62,7 @@ public class GamePanel extends JPanel
     }
 
     // metode buat nyetel data status game dari presenter
+    @Override
     public void setGameStats(String user, int sc, int am, int ms, int kl, boolean over, boolean pause) {
         this.username = user;
         this.score = sc;
@@ -71,6 +74,7 @@ public class GamePanel extends JPanel
     }
 
     // metode buat nyetel index tombol yang ditekan (buat efek tekan tombol)
+    @Override
     public void setPressedButtonIndex(int index) {
         this.pressedButtonIndex = index;
     }
@@ -260,5 +264,45 @@ public class GamePanel extends JPanel
         int imgWidth = img.getWidth(null);
         int imgHeight = img.getHeight(null);
         g2d.drawImage(img, x, y, x + w, y + h, imgWidth, 0, 0, imgHeight, null);
+    }
+
+    // Metode hit test buat ngecek tombol mana yang diklik di menu game over / pause
+    @Override
+    public int getMenuButtonAt(int mx, int my) {
+        int centerX = getWidth() / 2;
+        int centerY = getHeight() / 2;
+
+        if (isGameOver) {
+            int boardH = 400;
+            int boardY = centerY - (boardH / 2);
+            
+            // Cek Tombol Back to Menu (Index 2)
+            int btnW = 220; 
+            int btnH = 60;
+            int btnY = boardY + 260; 
+
+            if (mx >= centerX - (btnW / 2) && mx <= centerX + (btnW / 2) && my >= btnY && my <= btnY + btnH) {
+                return 2; // Kena Tombol Back
+            }
+        } 
+        else if (isPaused) {
+            int boardH = 350;
+            int boardY = centerY - (boardH / 2);
+            int btnW = 200; 
+            int btnH = 60;
+
+            // Cek Tombol Resume (Index 1)
+            int btn1Y = boardY + 140;
+            if (mx >= centerX - (btnW / 2) && mx <= centerX + (btnW / 2) && my >= btn1Y && my <= btn1Y + btnH) {
+                return 1;
+            }
+
+            // Cek Tombol Back (Index 2)
+            int btn2Y = boardY + 220;
+            if (mx >= centerX - (btnW / 2) && mx <= centerX + (btnW / 2) && my >= btn2Y && my <= btn2Y + btnH) {
+                return 2;
+            }
+        }
+        return 0; // Gak kena apa-apa
     }
 }

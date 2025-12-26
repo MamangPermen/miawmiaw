@@ -1,6 +1,9 @@
 package model;
 import java.sql.*;
 
+//  Kelas Database adalah utilitas untuk mengelola koneksi ke database MySQL.
+//  Kelas ini menyediakan metode untuk mengeksekusi query SELECT dan INSERT/UPDATE/DELETE, dan menutup koneksi database.
+
 public class Database
 {
     private Connection connection;

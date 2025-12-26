@@ -5,7 +5,7 @@ import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
 
-public class Sound 
+public class Sound // kelas untuk manajemen suara (audio game)
 {
     Clip clip; // objek Clip buat mainin suara
     URL soundURL[] = new URL[10]; // siapin 10 slot suara

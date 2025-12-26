@@ -3,6 +3,7 @@ package view;
 import presenter.*;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.*;
 
 // import dari model buat tipe data
 import model.Model;
@@ -10,6 +11,7 @@ import model.Sound;
 
 // Kelas MainFrame adalah jendela utama aplikasi
 // Kelas ini berfungsi sebagai wadah utama untuk menampung panel-panel lain seperti MainMenu dan GamePanel
+// Kelas ini juga mengelola pergantian antar panel dan pemutaran musik latar
 
 public class MainFrame extends JFrame 
 {
@@ -17,19 +19,35 @@ public class MainFrame extends JFrame
     private JPanel mainPanel; // panel utama yang pake cardlayout
     private GamePanel gamePanel; // panel game, disimpen biar gampang diakses
     private Model model; // model game
-    private MainMenuPresenter menuPresenter; // presenter buat main menu
+    private IMainMenuPresenter menuPresenter; // presenter buat main menu
+    private IGamePresenter gamePresenter; // presenter buat game
     private Sound bgm = new Sound(); // background music
 
     // Konstruktor
     public MainFrame() {
         this.setTitle("Miaw Miaw Boom"); // Judul window
-        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Tutup program kalo jendela ditutup
+        this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE); // Handle close operation manually biar db ketutup
         this.setSize(1024, 768); // Ukuran window (resolusi 1024x768)
         this.setResizable(false); // Gak bisa di-resize
         this.setLocationRelativeTo(null); // Biar muncul di tengah layar
 
         cardLayout = new CardLayout(); // Inisialisasi CardLayout
         mainPanel = new JPanel(cardLayout); // Inisialisasi mainPanel dengan CardLayout
+
+        // Window Listener buat handle event tutup window
+        this.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                // Logic Tutup Aplikasi
+                if (gamePresenter != null) {
+                    gamePresenter.stopGame();
+                }
+                if (menuPresenter != null) {
+                    menuPresenter.shutDown(); // Tutup DB Menu
+                }
+                System.exit(0);
+            }
+        });
 
         // Halaman 1: Leaderboard
         MainMenu MainMenu = new MainMenu();
@@ -40,44 +58,38 @@ public class MainFrame extends JFrame
         this.add(mainPanel);
         this.setVisible(true);
         playMusic(0); // main menu music
+
     }
 
     // metode buat ganti ke game panel
     public void switchToGame(String username) {
-        // 1. Hapus Panel Game Lama kalo ada
+        // Hapus Panel Game Lama kalo ada
         if (gamePanel != null) {
             mainPanel.remove(gamePanel);
             gamePanel = null; // Bantu GC bersihin memori
         }
         
-        // 2. Bikin Model Baru
+        // Bikin Model & Panel Baru
         model = new Model(username);
-        
-        // 3. Bikin View Baru
         gamePanel = new GamePanel(); 
         
-        // 4. Bikin Presenter Baru
-        GamePresenter presenter = new GamePresenter(model, gamePanel, this);
+        // Bikin Presenter Baru
+        gamePresenter = new GamePresenter(model, gamePanel, this);
         
-        // 5. Setup Listener
-        gamePanel.addKeyListener(presenter);
-        gamePanel.addMouseListener(presenter);
         gamePanel.setFocusable(true);
 
         playMusic(1); // in-game music
 
-        // 6. ADD PANEL BARU
-        mainPanel.add(gamePanel, "Game"); // Add yang baru
-        
-        // Refresh Tampilan biar CardLayout sadar ada perubahan
+        // ADD PANEL BARU
+        mainPanel.add(gamePanel, "Game");
         mainPanel.revalidate();
         mainPanel.repaint();
         
-        // 7. TAMPILIN PANEL GAME
+        // TAMPILIN PANEL GAME
         cardLayout.show(mainPanel, "Game");
         gamePanel.requestFocusInWindow();
         
-        presenter.startGame(); // Mulai game loop
+        gamePresenter.startGame(); // Mulai game loop
     }
     
     // metode buat ganti ke leaderboard panel

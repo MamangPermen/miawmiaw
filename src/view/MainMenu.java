@@ -5,7 +5,11 @@ import java.awt.*;
 import java.awt.event.MouseAdapter; 
 import java.io.InputStream;
 
-public class MainMenu extends JPanel 
+// Kelas MainMenu adalah tampilan visual untuk menu utama dan leaderboard.
+// Kelas ini bertanggung jawab merender tabel skor, tombol navigasi, dan input field,
+// serta menyediakan API Hit-Test untuk mendeteksi interaksi mouse sesuai kontrak IMainMenu.
+
+public class MainMenu extends JPanel implements IMainMenu
 {
     private JTextField usernameField; // Input field buat username
     
@@ -21,10 +25,10 @@ public class MainMenu extends JPanel
     private boolean isDraggingScroll = false;
 
     // KOORDINAT & RECTANGLE
-    public Rectangle playBtnRect, quitBtnRect, scrollBarRect;
-    public int boardX, boardY, boardW, boardH;
-    public int scrollTrackY, scrollTrackHeight;
-    public final int maxVisibleRows = 7; 
+    private Rectangle playBtnRect, quitBtnRect, scrollBarRect;
+    private int boardX, boardY, boardW, boardH;
+    private int scrollTrackY, scrollTrackHeight;
+    private final int maxVisibleRows = 7; 
 
     // Konstruktor
     public MainMenu() {
@@ -207,7 +211,55 @@ public class MainMenu extends JPanel
         g.drawString(text, x - (fm.stringWidth(text) / 2), y);
     }
 
-    // Metode buat nambahin Mouse Listener dari Presenter
+    // metode buat dapetin index baris di tabel berdasarkan koordinat mouse
+    @Override
+    public int getRowIndexAt(int mx, int my) {
+        if (leaderboardData == null) return -1;
+
+        int startY = boardY + 110;
+        int rowY = startY + 40;
+        int rowHeight = 35;
+        
+        int endIndex = Math.min(leaderboardData.length, scrollOffset + maxVisibleRows);
+
+        // Loop cek baris
+        for (int i = scrollOffset; i < endIndex; i++) {
+            if (my >= rowY - 25 && my <= rowY + 5) {
+                // Cek Horizontal juga sekalian
+                if (mx >= boardX + 50 && mx <= boardX + boardW - 50) {
+                    return i; // ketemu barisnya
+                }
+            }
+            rowY += rowHeight;
+        }
+        return -1; // Gak kena baris manapun
+    }
+
+    // == Implementasi kontrak (interface) IMainMenu ==
+    // Getter buat Koordinat & Hit Test
+    @Override public int getMaxVisibleRows() { return maxVisibleRows; }
+    @Override public int getScrollTrackY() { return scrollTrackY; }
+    @Override public int getScrollTrackHeight() { return scrollTrackHeight; }
+
+    // Hit Test API
+    @Override
+    public boolean isScrollBarHit(int mx, int my) {
+        return scrollBarRect != null && scrollBarRect.contains(mx, my);
+    }
+
+    @Override
+    public boolean isPlayBtnHit(int mx, int my) {
+        return playBtnRect != null && playBtnRect.contains(mx, my);
+    }
+
+    @Override
+    public boolean isQuitBtnHit(int mx, int my) {
+        return quitBtnRect != null && quitBtnRect.contains(mx, my);
+    }
+
+    // == Implementasi kontrak (interface) IMainMenu == 
+    // Fungsi Dasar Swing
+    @Override
     public void addMouseListenerToPanel(MouseAdapter listener) {
         this.addMouseListener(listener);
         this.addMouseMotionListener(listener);
@@ -215,21 +267,19 @@ public class MainMenu extends JPanel
     }
 
     // Setter buat Update Tampilan
-    public void setScrollOffset(int offset) { this.scrollOffset = offset; repaint(); }
-    public void setSelectedRowIndex(int index) { this.selectedRowIndex = index; repaint(); }
-    public void setPressedButtonType(int type) { this.pressedButtonType = type; repaint(); }
-    public void setIsDraggingScroll(boolean isDragging) { this.isDraggingScroll = isDragging; repaint(); }
-    
-    // Getter buat State & Data
-    public Object[][] getLeaderboardData() { return leaderboardData; }
-    public int getScrollOffset() { return scrollOffset; }
-    public JTextField getUsernameField() { return usernameField; }
-
-    // Setter Data Awal
-    public void setLeaderboardData(Object[][] data) {
+    @Override public void setScrollOffset(int offset) { this.scrollOffset = offset; repaint(); }
+    @Override public void setSelectedRowIndex(int index) { this.selectedRowIndex = index; repaint(); }
+    @Override public void setPressedButtonType(int type) { this.pressedButtonType = type; repaint(); }
+    @Override public void setIsDraggingScroll(boolean isDragging) { this.isDraggingScroll = isDragging; repaint(); }
+    @Override public void setLeaderboardData(Object[][] data) {
         this.leaderboardData = data;
         this.scrollOffset = 0;
         this.selectedRowIndex = -1;
         repaint();
     }
+    
+    // Getter buat State & Data
+    @Override public Object[][] getLeaderboardData() { return leaderboardData; }
+    @Override public int getScrollOffset() { return scrollOffset; }
+    @Override public JTextField getUsernameField() { return usernameField; }
 }
