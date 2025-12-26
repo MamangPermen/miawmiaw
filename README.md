@@ -1,49 +1,4 @@
-# Strike Vampcats (Miaw Miaw Boom) 🐱💥
-
-**Strike Vampcats** is a Top-Down Survival Shooter game built with Java Swing. Survive endless waves of enemies, dodge obstacles, manage your ammo.
-
-## ✨ Features
-
-* **Strict MVP Architecture:** Clean separation of concerns using Interfaces (Contract-based programming) for Views and Presenters.
-* **Leaderboard System:** Persistent data storage using MySQL Database (`db_tmd`).
-* **Dynamic Gameplay:**
-    * Enemy AI with pathfinding logic (sliding around obstacles).
-    * Ammo management system (Missed shots cost ammo, enemy misses grant ammo).
-    * Obstacle generation with collision detection.
-* **Custom UI:** Pixel-art style interface, custom buttons, and smooth scrolling leaderboard.
-* **Audio System:** Background music (BGM) and Sound Effects (SFX) for shooting and hits.
-
-## 🛠️ Tech Stack & Architecture
-
-This project demonstrates a **Strict Model-View-Presenter (MVP)** pattern to ensure loose coupling and high testability.
-
-* **Model:** Handles business logic, game state, database operations (`Database.java`, `Player`, `Enemy`).
-* **View:** Passive interface responsible only for rendering and capturing input (`GamePanel`, `MainMenu`). Defines strict contracts via Interfaces (`IGamePanel`, `IMainMenu`).
-* **Presenter:** The middleman that retrieves data from the Model and updates the View (`GamePresenter`, `MainMenuPresenter`).
-
-## 🚀 How to Run
-Prerequisites
-Java Development Kit (JDK) 8 or higher.
-
-MySQL Server installed and running.
-
-### 1. Database Setup
-Execute the following SQL command in your MySQL client to set up the database:
-
-```sql
-CREATE DATABASE db_tmd;
-
-USE db_tmd;
-
-CREATE TABLE tbenefit (
-    username VARCHAR(50) PRIMARY KEY,
-    skor INT DEFAULT 0,
-    missed_bullets INT DEFAULT 0,
-    ammo INT DEFAULT 0
-);
-```
-
-### 2. Compile & Launch
+### Compile & Launch
 ```bash
 # Create bin directory & copy assets
 mkdir bin
@@ -70,14 +25,14 @@ java -cp "bin;src/lib/*" Main
 
 This project uses high-quality assets from the following creators. We would like to express our gratitude for their contributions to the game development community:
 
-### 🎨 Visual Assets
+### Visual Assets
 * **Player, Enemy, & Enemy Bullets:** [Cat Pack (Halloween Edition)](https://toffeecraft.itch.io/cat-pack-halloween-edition) by **ToffeeCraft**.
 * **Background:** [Vampus Castle Background](https://pixel-1992.itch.io/vampus-castle-free-pixel-art-side-scroller-background) by **PIXEL_1992**.
 * **Player Bullets:** [Pixel Fire Asset Pack](https://devkidd.itch.io/pixel-fire-asset-pack) by **Devkidd**.
 * **Obstacles (Boxes):** [Wood Set](https://nyknck.itch.io/wood-set) by **NYKNCK**.
 * **User Interface (UI):** [Horror Mega Pack](https://toffeecraft.itch.io/horror-mega-pack) by **ToffeeCraft**.
 
-### 🔊 Audio & Fonts
+### Audio & Fonts
 * **Battle Music:** [Montogoronto](https://pixabay.com/id/users/montogoronto-34345685/) on Pixabay.
 * **Menu Music:** [Tunetank](https://pixabay.com/id/users/tunetank-50201703/) on Pixabay.
 * **Sound Effects (SFX):** [Free SFX Pack](https://kronbits.itch.io/freesfx) by **Kronbits**.
